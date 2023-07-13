@@ -9,7 +9,7 @@ fn main() {
 
     let font = font::Font::new();
     assert_eq!(
-        font.get_character("1").unwrap().clone(),
-        ["0x20", "0x60", "0x20", "0x20", "0x70"]
+        font.get_character(&'1').unwrap().clone(),
+        &[0x20, 0x60, 0x20, 0x20, 0x70]
     )
 }
