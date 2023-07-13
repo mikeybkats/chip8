@@ -18,8 +18,26 @@ impl Memory {
 // impl Display {}
 
 // // A program counter, often called just “PC”, which points at the current instruction in memory
-// pub struct ProgramCounter {}
-// impl ProgramCounter {}
+pub struct ProgramCounter {
+    count: u8,
+}
+impl ProgramCounter {
+    pub fn new(&self) -> ProgramCounter {
+        ProgramCounter { count: 0 }
+    }
+
+    pub fn clock(&mut self) {
+        self.count += 1
+    }
+
+    pub fn set_count(&mut self, new_count: u8) {
+        self.count = new_count
+    }
+
+    pub fn get_count(&self) -> u8 {
+        self.count
+    }
+}
 
 // // One 16-bit index register called “I” which is used to point at locations in memory
 // pub struct IRegister {}
