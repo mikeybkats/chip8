@@ -13,11 +13,41 @@ impl Memory {
     }
 }
 
-// Display: 64 x 32 pixels (or 128 x 64 for SUPER-CHIP) monochrome, ie. black or white
-// pub struct Display {}
-// impl Display {}
+use pixels::{Pixels, SurfaceTexture};
+use winit::{
+    event::{Event, WindowEvent},
+    event_loop::{ControlFlow, EventLoop},
+    window::WindowBuilder,
+}
+use winit::dpi::LogicalSize;
 
-// // A program counter, often called just “PC”, which points at the current instruction in memory
+// Display: 64 x 32 pixels (or 128 x 64 for SUPER-CHIP) monochrome, ie. black or white
+pub struct Display {
+    width: u32,
+    height: u32,
+    event_loop: EventLoop<()>
+}
+impl Display {
+    fn new()-> Display {
+        Display { width: 64, height: 32, event_loop: EventLoop::new() }
+    }
+
+    fn build_window(self){
+        // let event_loop = EventLoop::new();
+
+        let window = {
+            let size = LogicalSize::new(self.width as f64, self.height as f64);
+            WindowBuilder::new()
+                .with_title("Hello Pixels")
+                .with_inner_size(size)
+                .with_min_inner_size(size)
+                .build(&self.event_loop)
+                .unwrap()
+        };
+    }
+}
+
+// A program counter, often called just “PC”, which points at the current instruction in memory
 pub struct ProgramCounter {
     count: u8,
 }

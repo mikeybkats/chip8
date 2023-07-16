@@ -15,6 +15,7 @@ fn main() {
 
     let mut program_counter = ProgramCounter::new();
     assert_eq!(program_counter.get_count(), 0);
+
     program_counter.clock();
     program_counter.clock();
     assert_eq!(program_counter.get_count(), 2);
