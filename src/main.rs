@@ -1,4 +1,4 @@
-use crate::components::{Memory, ProgramCounter};
+use crate::components::{Display, Memory, ProgramCounter};
 
 mod components;
 mod font;
@@ -24,4 +24,7 @@ fn main() {
     program_counter.clear();
     assert_eq!(program_counter.get_count(), 0);
     println!("program counter count: {}", program_counter.get_count());
+
+    let display = Display::new(64, 32);
+    display.loop_window();
 }
