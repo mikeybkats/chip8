@@ -35,4 +35,29 @@ impl<'a> Font<'a> {
             None => Err(String::from("No Character Found")),
         }
     }
+
+    pub fn draw_character(&self, symbol: &char) {
+        let character_arr = self.char_set.get(symbol);
+
+        if let Some(character) = character_arr.as_ref() {
+            for row in character.iter() {
+                // {:b} is binary format
+                let binary_string = format!("{:b}", row);
+                let mut binary_digits = Vec::new();
+
+                let mut count = 0;
+                for digit in binary_string.chars() {
+                    if count < 4 {
+                        binary_digits.push(digit);
+                        // TODO: draw the pixel here
+                    } else {
+                        break;
+                    }
+                    count += 1;
+                }
+
+                println!("{:?}", binary_digits)
+            }
+        }
+    }
 }
