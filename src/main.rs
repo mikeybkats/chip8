@@ -1,6 +1,6 @@
 use crate::display::Display;
 use crate::memory::Memory;
-use crate::program_counter::ProgramCounter;
+// use crate::program_counter::ProgramCounter;
 
 mod display;
 mod font;
@@ -31,6 +31,10 @@ fn main() {
     // assert_eq!(program_counter.get_count(), 0);
     // println!("program counter count: {}", program_counter.get_count());
 
-    // let display = Display::new(64, 32);
+    let mut display = Display::new(64, 32);
     // display.loop_window().unwrap();
+    display.draw(100, 100);
+    // display.draw(101, 100);
+    // display.draw(102, 100);
+    // display.draw(103, 100);
 }
