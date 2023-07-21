@@ -1,9 +1,9 @@
-use pixels::wgpu::Color;
+// use pixels::wgpu::Color;
 use pixels::{Error, Pixels, SurfaceTexture};
 // use pixels::{Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
-use winit::event::{Event, WindowEvent};
-use winit::event_loop::{ControlFlow, EventLoopWindowTarget};
+use winit::event::Event;
+use winit::event_loop::ControlFlow;
 use winit::window::Window;
 use winit::{
     // event::{Event, WindowEvent},
@@ -28,9 +28,9 @@ pub struct Point {
 // Display: 64 x 32 pixels (or 128 x 64 for SUPER-CHIP) monochrome, ie. black or white
 pub struct Display {
     width: u32,
-    height: u32,
     event_loop: Box<EventLoop<()>>,
     window: Window,
+    viewport: Pixels,
 }
 impl Display {
     pub fn new(width: u32, height: u32) -> Display {
@@ -38,22 +38,14 @@ impl Display {
         let width = width * 10;
         let height = height * 10;
         let window = Self::build_window(width, height, &event_loop);
+        let viewport = Self::build_pixel_screen(&window).unwrap();
 
         Display {
             width,
-            height,
             event_loop,
+            viewport,
             window,
         }
-    }
-
-    fn run<F>(self, event_handler: F)
-    where
-        F: Fn(&Event<'_, ()>, &mut ControlFlow) + 'static,
-    {
-        self.event_loop.run(move |event, _, control_flow| {
-            event_handler(&event, control_flow);
-        });
     }
 
     fn build_window(width: u32, height: u32, event_loop: &EventLoop<()>) -> Window {
@@ -66,37 +58,50 @@ impl Display {
             .unwrap()
     }
 
-    pub fn pixels(&self) -> Result<Pixels, Error> {
-        let window_size = self.window.inner_size();
-        let surface_texture =
-            SurfaceTexture::new(window_size.width, window_size.height, &self.window);
-        Pixels::new(window_size.width, window_size.height, surface_texture)
+    pub fn build_pixel_screen(window: &Window) -> Result<Pixels, Error> {
+        let window_size = window.inner_size();
+        let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, window);
+
+        let viewport = Pixels::new(window_size.width, window_size.height, surface_texture)?;
+        Ok(viewport)
     }
 
     pub fn loop_window(self) -> Result<(), pixels::Error> {
-        let mut pixels = self.pixels().unwrap();
+        let mut viewport = self.viewport;
 
-        self.event_loop.run(move |_event, _, _control_flow| {
-            let frame = pixels.frame_mut();
-
-            for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
-                let x = (i % self.width as usize) as i16;
-                let y = (i / self.width as usize) as i16;
-
-                if x > 100 && x < 200 && y > 200 && y < 400 {
-                    pixel[0] = 0xE2; // R : E2 = (14 * 16^1) + (2 * 16^0) = 224 + 2 = 226
-                    pixel[1] = 0x1B; // G : 1B = (1 * 16^1) + (11 * 16^0) = 16 + 11 = 27
-                    pixel[2] = 0x88; // B : 88 = (8 * 16^1) + (8 * 16^0) = 128 + 8 = 136
-                    pixel[3] = 0xff; // A : ff = (15 * 16^1) + (15 * 16^0) = 240 + 15 = 255
+        self.event_loop.run(move |event, _, _control_flow| {
+            match event {
+                // handle RedrawRequested event
+                Event::RedrawRequested(_) => {
+                    // draw state
+                    for (index, pixel) in viewport.frame_mut().iter().enumerate() {
+                        if *pixel == 1 {
+                            // draw pixel...
+                        }
+                    }
                 }
+                // handle other events...
+                _ => {}
             }
-
-            // Draw it to the `SurfaceTexture`
-            pixels.render().unwrap();
-
-            self.window.request_redraw();
         });
     }
+
+    // let frame = pixels.frame_mut();
+
+    // for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
+    //     let x = (i % self.width as usize) as i16;
+    //     let y = (i / self.width as usize) as i16;
+
+    //     if x > 100 && x < 200 && y > 200 && y < 400 {
+    //         pixel[0] = 0xE2; // R : E2 = (14 * 16^1) + (2 * 16^0) = 224 + 2 = 226
+    //         pixel[1] = 0x1B; // G : 1B = (1 * 16^1) + (11 * 16^0) = 16 + 11 = 27
+    //         pixel[2] = 0x88; // B : 88 = (8 * 16^1) + (8 * 16^0) = 128 + 8 = 136
+    //         pixel[3] = 0xff; // A : ff = (15 * 16^1) + (15 * 16^0) = 240 + 15 = 255
+    //     }
+    // }
+
+    // // Draw it to the `SurfaceTexture`
+    // pixels.render().unwrap();
 
     // TODO: change to draw function with Drawable
     // pub fn draw<E>(self, dest: &Point, _element: &[u8; 5])
@@ -105,40 +110,20 @@ impl Display {
     pub fn draw(&mut self, x: usize, y: usize) {
         // assert!(dest.x <= self.width as usize);
         // assert!(dest.y <= self.height as usize);
-        let mut pixels = self.pixels().unwrap();
+        let viewport = &mut self.viewport;
 
-        let event_loop = std::mem::take(&mut self.event_loop);
+        let pixels = viewport.frame_mut();
 
-        event_loop.run(move |_event, _, _control_flow| {
-            let screen = pixels.frame_mut();
+        let i = (y * self.width as usize + x) as usize;
 
-            let i = (y) + x as usize;
-            // * y as u32 + x as u32;
-            // let i = (y * self.width as usize + x) as usize;
-            for (index, pixel) in screen.chunks_exact_mut(4).enumerate() {
-                if index == i {
-                    pixel.copy_from_slice(&[0xE2, 0x1B, 0x88, 0xff])
-                }
+        for (index, pixel) in pixels.chunks_exact_mut(4).enumerate() {
+            if index == i {
+                pixel.copy_from_slice(&[0xE2, 0x1B, 0x88, 0xff])
             }
+        }
 
-            pixels.render().unwrap();
+        viewport.render().unwrap();
 
-            // self.window.request_redraw();
-        });
-
-        // 5 is the height of the font
-        // for i in 0..5 {
-        //     // let i = dest.x * 4 + dest.y * self.width as usize * 4 + y * self.width as usize * 4;
-        //     // let zipped = screen[i..i + self.width as usize]
-        //     //     .iter_mut()
-        //     //     .zip(&pixels[s..s + self.width as usize]); // &pixels in this context is a Vec<u8>
-        //     let zipped = screen[i..5 + self.width as usize].iter_mut().zip(0..5);
+        self.window.request_redraw();
     }
 }
-
-//    // Draw the invaders
-//    for row in &self.invaders.grid {
-//     for invader in row.iter().flatten() {
-//         blit(screen, &invader.pos, &invader.sprite);
-//     }
-// }

@@ -32,9 +32,9 @@ fn main() {
     // println!("program counter count: {}", program_counter.get_count());
 
     let mut display = Display::new(64, 32);
-    // display.loop_window().unwrap();
     display.draw(100, 100);
-    // display.draw(101, 100);
-    // display.draw(102, 100);
-    // display.draw(103, 100);
+    display.draw(101, 100);
+    display.draw(102, 100);
+    display.draw(103, 100);
+    display.loop_window().unwrap();
 }
