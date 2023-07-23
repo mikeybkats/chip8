@@ -2,8 +2,8 @@
 use pixels::{Error, Pixels, SurfaceTexture};
 // use pixels::{Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
-use winit::event::Event;
-use winit::event_loop::ControlFlow;
+// use winit::event::Event;
+// use winit::event_loop::ControlFlow;
 use winit::window::Window;
 use winit::{
     // event::{Event, WindowEvent},
@@ -28,17 +28,16 @@ pub struct Point {
 // Display: 64 x 32 pixels (or 128 x 64 for SUPER-CHIP) monochrome, ie. black or white
 pub struct Display {
     width: u32,
-    event_loop: Box<EventLoop<()>>,
+    event_loop: EventLoop<()>,
     window: Window,
     viewport: Pixels,
 }
 impl Display {
     pub fn new(width: u32, height: u32) -> Display {
-        let event_loop = Box::new(EventLoop::new());
-        let width = width * 10;
-        let height = height * 10;
-        let window = Self::build_window(width, height, &event_loop);
-        let viewport = Self::build_pixel_screen(&window).unwrap();
+        let scale = 20;
+        let event_loop = EventLoop::new();
+        let window = Self::build_window(width * scale, height * scale, &event_loop);
+        let viewport = Self::build_pixel_screen(&window, width, height).unwrap();
 
         Display {
             width,
@@ -58,67 +57,54 @@ impl Display {
             .unwrap()
     }
 
-    pub fn build_pixel_screen(window: &Window) -> Result<Pixels, Error> {
+    pub fn build_pixel_screen(window: &Window, width: u32, height: u32) -> Result<Pixels, Error> {
         let window_size = window.inner_size();
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, window);
 
-        let viewport = Pixels::new(window_size.width, window_size.height, surface_texture)?;
+        let viewport = Pixels::new(width, height, surface_texture)?;
         Ok(viewport)
     }
 
     pub fn loop_window(self) -> Result<(), pixels::Error> {
-        let mut viewport = self.viewport;
+        // let mut viewport = self.viewport;
 
         self.event_loop.run(move |event, _, _control_flow| {
             match event {
                 // handle RedrawRequested event
-                Event::RedrawRequested(_) => {
-                    // draw state
-                    for (index, pixel) in viewport.frame_mut().iter().enumerate() {
-                        if *pixel == 1 {
-                            // draw pixel...
-                        }
-                    }
-                }
+                // Event::RedrawRequested(_) => {
+                //     // draw state
+                //     for (index, pixel) in viewport.frame_mut().iter().enumerate() {
+                //         if *pixel == 1 {
+                //             // draw pixel...
+                //         }
+                //     }
+                // }
                 // handle other events...
                 _ => {}
             }
         });
     }
 
-    // let frame = pixels.frame_mut();
-
-    // for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
-    //     let x = (i % self.width as usize) as i16;
-    //     let y = (i / self.width as usize) as i16;
-
-    //     if x > 100 && x < 200 && y > 200 && y < 400 {
-    //         pixel[0] = 0xE2; // R : E2 = (14 * 16^1) + (2 * 16^0) = 224 + 2 = 226
-    //         pixel[1] = 0x1B; // G : 1B = (1 * 16^1) + (11 * 16^0) = 16 + 11 = 27
-    //         pixel[2] = 0x88; // B : 88 = (8 * 16^1) + (8 * 16^0) = 128 + 8 = 136
-    //         pixel[3] = 0xff; // A : ff = (15 * 16^1) + (15 * 16^0) = 240 + 15 = 255
-    //     }
-    // }
-
-    // // Draw it to the `SurfaceTexture`
-    // pixels.render().unwrap();
-
-    // TODO: change to draw function with Drawable
+    // TODO: implement draw function with Drawable
     // pub fn draw<E>(self, dest: &Point, _element: &[u8; 5])
     // where
     //     E: Drawable,
-    pub fn draw(&mut self, x: usize, y: usize) {
-        // assert!(dest.x <= self.width as usize);
-        // assert!(dest.y <= self.height as usize);
+
+    /*
+     * draw_pixel
+     * draws a pixel at the x, y co-ordinates
+     */
+    pub fn draw_pixel(&mut self, x: usize, y: usize) {
         let viewport = &mut self.viewport;
 
         let pixels = viewport.frame_mut();
 
-        let i = (y * self.width as usize + x) as usize;
+        let base_point = (y * (self.width as usize)) + x as usize;
 
-        for (index, pixel) in pixels.chunks_exact_mut(4).enumerate() {
-            if index == i {
-                pixel.copy_from_slice(&[0xE2, 0x1B, 0x88, 0xff])
+        for (i, pixel) in pixels.chunks_exact_mut(4).enumerate() {
+            if i == base_point {
+                println!("base point: {}", base_point);
+                pixel[0..4].copy_from_slice(&[0xE2, 0x1B, 0x88, 0xff]);
             }
         }
 
