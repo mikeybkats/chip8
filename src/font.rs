@@ -36,7 +36,7 @@ impl<'a> Font<'a> {
         }
     }
 
-    pub fn draw_character(&self, symbol: &char) {
+    pub fn get_font_sprite(&self, symbol: &char) {
         let character_arr = self.char_set.get(symbol);
 
         if let Some(character) = character_arr.as_ref() {
