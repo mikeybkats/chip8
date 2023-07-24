@@ -17,10 +17,10 @@ pub fn chip8(width: u32, height: u32) {
 
     display.draw_pixel(63, 31);
 
-    chip8_program_loop(event_loop);
+    chip8_program_loop(event_loop, display);
 }
 
-fn chip8_program_loop(event_loop: EventLoop<()>) {
+fn chip8_program_loop(event_loop: EventLoop<()>, display: Display) {
     event_loop.run(move |event, _, control_flow| {
         match event {
             Event::WindowEvent {
@@ -34,6 +34,7 @@ fn chip8_program_loop(event_loop: EventLoop<()>) {
             Event::RedrawRequested(_) => {
                 // redraw state
                 println!("Redrawing");
+                display.redraw();
             }
             // handle other events...
             _ => {}

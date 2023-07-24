@@ -18,7 +18,7 @@ pub trait Drawable<'a> {
 
 // Display: 64 x 32 pixels (or 128 x 64 for SUPER-CHIP) monochrome, ie. black or white
 pub struct Display {
-    window: Window,
+    pub window: Window,
     viewport: Pixels,
     width: u32,
 }
@@ -35,18 +35,11 @@ impl Display {
         }
     }
 
-    /* handle_changes
-     * called after blitting memory and a redraw is required.
+    /*
+     * redraw
      */
-    fn handle_changes(&self) {
-        match self.viewport.render() {
-            Ok(_value) => {
-                self.window.request_redraw();
-            }
-            Err(error) => {
-                println!("Error: {}", error)
-            }
-        }
+    pub fn redraw(&self) {
+        self.viewport.render().unwrap();
     }
 
     /*
@@ -93,8 +86,6 @@ impl Display {
                 pixel[0..4].copy_from_slice(&[0xE2, 0x1B, 0x88, 0xff]);
             }
         }
-
-        self.handle_changes();
     }
 
     // blit is shorthand for bit block transfer
