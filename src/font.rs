@@ -1,11 +1,34 @@
 use std::collections::HashMap;
 
+use crate::display::Drawable;
+
+pub struct FontSprite {
+    width: usize,
+    height: usize,
+    pixels: Vec<u8>,
+}
+
+impl Drawable for FontSprite {
+    fn width(&self) -> usize {
+        self.width
+    }
+
+    fn height(&self) -> usize {
+        self.height
+    }
+
+    fn pixels(&self) -> &[u8] {
+        &self.pixels
+    }
+}
+
 pub struct Font<'a> {
     char_set: HashMap<char, &'a [u8; 5]>,
+    sprites: HashMap<char, FontSprite>,
 }
 impl<'a> Font<'a> {
     pub fn new() -> Font<'a> {
-        let font: HashMap<char, &[u8; 5]> = HashMap::from([
+        let char_set: HashMap<char, &[u8; 5]> = HashMap::from([
             ('0', &[0xF0, 0x90, 0x90, 0x90, 0xF0]),
             ('1', &[0x20, 0x60, 0x20, 0x20, 0x70]),
             ('2', &[0xF0, 0x10, 0xF0, 0x80, 0xF0]),
@@ -24,7 +47,19 @@ impl<'a> Font<'a> {
             ('F', &[0xF0, 0x80, 0xF0, 0x80, 0x80]),
         ]);
 
-        Font { char_set: font }
+        let mut sprites: HashMap<char, FontSprite> = HashMap::new();
+
+        for (key, val) in char_set.iter() {
+            let sprite = FontSprite {
+                width: 8,
+                height: 5,
+                pixels: val.to_vec(),
+            };
+
+            sprites.insert(key.clone(), sprite);
+        }
+
+        Font { char_set, sprites }
     }
 
     pub fn get_character(&self, symbol: &char) -> Result<&&[u8; 5], String> {
@@ -36,28 +71,29 @@ impl<'a> Font<'a> {
         }
     }
 
-    pub fn get_font_sprite(&self, symbol: &char) {
-        let character_arr = self.char_set.get(symbol);
+    pub fn get_font_sprite(&self, symbol: &char) -> Option<&FontSprite> {
+        // let character_arr = self.char_set.get(symbol);
 
-        if let Some(character) = character_arr.as_ref() {
-            for row in character.iter() {
-                // {:b} is binary format
-                let binary_string = format!("{:b}", row);
-                let mut binary_digits = Vec::new();
+        // if let Some(character) = character_arr.as_ref() {
+        //     for row in character.iter() {
+        //         // {:b} is binary format
+        //         let binary_string = format!("{:b}", row);
+        //         let mut binary_digits = Vec::new();
 
-                let mut count = 0;
-                for digit in binary_string.chars() {
-                    if count < 4 {
-                        binary_digits.push(digit);
-                        // TODO: draw the pixel here
-                    } else {
-                        break;
-                    }
-                    count += 1;
-                }
+        //         let mut count = 0;
+        //         for digit in binary_string.chars() {
+        //             if count < 4 {
+        //                 binary_digits.push(digit);
+        //                 // TODO: draw the pixel here
+        //             } else {
+        //                 break;
+        //             }
+        //             count += 1;
+        //         }
 
-                println!("{:?}", binary_digits)
-            }
-        }
+        //         println!("{:?}", binary_digits)
+        //     }
+        // }
+        self.sprites.get(symbol)
     }
 }

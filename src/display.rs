@@ -3,24 +3,12 @@ use winit::dpi::LogicalSize;
 use winit::window::Window;
 use winit::{event_loop::EventLoop, window::WindowBuilder};
 
-/// Drawables can be blitted to the pixel buffer and animated.
-pub trait Drawable<'a> {
-    fn width(&self) -> usize;
-    fn height(&self) -> usize;
-    fn pixels(&self) -> &[u8];
-}
-
-/// A tiny position vector.
-// pub struct Point {
-//     pub(crate) x: usize,
-//     pub(crate) y: usize,
-// }
-
 // Display: 64 x 32 pixels (or 128 x 64 for SUPER-CHIP) monochrome, ie. black or white
 pub struct Display {
     pub window: Window,
     viewport: Pixels,
-    width: u32,
+    width: usize,
+    height: usize,
 }
 impl Display {
     pub fn new(width: u32, height: u32, event_loop: &EventLoop<()>) -> Display {
@@ -31,7 +19,8 @@ impl Display {
         Display {
             viewport,
             window,
-            width,
+            width: width as usize,
+            height: height as usize,
         }
     }
 
@@ -82,17 +71,54 @@ impl Display {
         for (i, pixel) in pixels.chunks_exact_mut(4).enumerate() {
             if i == base_point {
                 println!("Copying to slice");
-                // pixel[i..i + 4].copy_from_slice(&[0xE2, 0x1B, 0x88, 0xff]);
                 pixel[0..4].copy_from_slice(&[0xE2, 0x1B, 0x88, 0xff]);
             }
         }
+
+        // self.window.request_redraw(); // this method does not seem to be needed for some reason
     }
 
     // blit is shorthand for bit block transfer
     // it refers to the operation of copying a block of data to a block of pixels in memory
-    // pub fn blit_drawable<'a, E>(pixels: &mut [u8], dest: &Point, _element: &'a E)
-    // where
-    //     E: Drawable<'a>,
-    // {
-    // }
+    pub fn blit_drawable<'a, E>(&mut self, dest: &Point, sprite: &E)
+    where
+        E: Drawable,
+    {
+        assert!(dest.x + sprite.width() <= self.width);
+        assert!(dest.y + sprite.height() <= self.height);
+
+        // get viewport
+        let viewport = &mut self.viewport;
+        // get the pixels_screen
+        let pixels_screen = viewport.frame_mut();
+
+        // calculate the base point: where to draw the sprite
+        let mut draw_point = dest.y * self.width + dest.x;
+
+        for i in 0..sprite.height() {
+            draw_point = draw_point + (self.width * i);
+
+            for i in 0..sprite.width() {
+                draw_point = draw_point + i;
+
+                pixels_screen[draw_point] = 0xE2;
+                pixels_screen[draw_point + 1] = 0x1B;
+                pixels_screen[draw_point + 2] = 0x88;
+                pixels_screen[draw_point + 3] = 0xff;
+            }
+        }
+    }
+}
+
+/// Drawables can be blitted to the pixel buffer and animated.
+pub trait Drawable {
+    fn width(&self) -> usize;
+    fn height(&self) -> usize;
+    fn pixels(&self) -> &[u8];
+}
+
+/// A tiny position vector.
+pub struct Point {
+    pub x: usize,
+    pub y: usize,
 }
