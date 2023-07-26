@@ -98,13 +98,15 @@ impl Display {
         for i in 0..sprite.height() {
             draw_point = draw_point + (self.width * i);
 
-            for i in 0..sprite.width() {
-                draw_point = draw_point + i;
+            for j in 0..sprite.width() {
+                draw_point = draw_point + j;
 
-                pixels_screen[draw_point] = 0xE2;
-                pixels_screen[draw_point + 1] = 0x1B;
-                pixels_screen[draw_point + 2] = 0x88;
-                pixels_screen[draw_point + 3] = 0xff;
+                if sprite.pixels()[i + j] == 1 {
+                    pixels_screen[draw_point] = 0xE2;
+                    pixels_screen[draw_point + 1] = 0x1B;
+                    pixels_screen[draw_point + 2] = 0x88;
+                    pixels_screen[draw_point + 3] = 0xff;
+                }
             }
         }
     }

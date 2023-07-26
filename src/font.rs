@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::display::Drawable;
 
+#[derive(Debug)]
 pub struct FontSprite {
     width: usize,
     height: usize,
@@ -53,7 +54,7 @@ impl<'a> Font<'a> {
             let sprite = FontSprite {
                 width: 8,
                 height: 5,
-                pixels: val.to_vec(),
+                pixels: Self::convert_font_to_sprite(*val),
             };
 
             sprites.insert(key.clone(), sprite);
@@ -71,29 +72,25 @@ impl<'a> Font<'a> {
         }
     }
 
+    fn convert_font_to_sprite(font_symbol: &[u8]) -> Vec<u8> {
+        let mut pixels: Vec<u8> = Vec::new();
+        for row in font_symbol.iter() {
+            // {:b} is binary format
+            let binary_string = format!("{:b}", row);
+
+            for bit in binary_string.chars() {
+                if let Some(bit_value) = bit.to_digit(2) {
+                    pixels.push(bit_value as u8);
+                }
+            }
+        }
+        // println!("{:?}", pixels);
+        pixels
+    }
+
     pub fn get_font_sprite(&self, symbol: &char) -> Option<&FontSprite> {
         // let character_arr = self.char_set.get(symbol);
 
-        // if let Some(character) = character_arr.as_ref() {
-        //     for row in character.iter() {
-        //         // {:b} is binary format
-        //         let binary_string = format!("{:b}", row);
-        //         let mut binary_digits = Vec::new();
-
-        //         let mut count = 0;
-        //         for digit in binary_string.chars() {
-        //             if count < 4 {
-        //                 binary_digits.push(digit);
-        //                 // TODO: draw the pixel here
-        //             } else {
-        //                 break;
-        //             }
-        //             count += 1;
-        //         }
-
-        //         println!("{:?}", binary_digits)
-        //     }
-        // }
         self.sprites.get(symbol)
     }
 }

@@ -23,7 +23,8 @@ fn main() {
         &[0x20, 0x60, 0x20, 0x20, 0x70]
     );
 
-    font.get_font_sprite(&'0');
+    let sprite = font.get_font_sprite(&'0').unwrap();
+    println!("font sprite: {:?}", sprite);
 
     // let mut program_counter = ProgramCounter::new();
     // assert_eq!(program_counter.get_count(), 0);

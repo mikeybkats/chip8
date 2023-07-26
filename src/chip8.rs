@@ -1,4 +1,4 @@
-use crate::Display;
+use crate::{display::Point, font, Display};
 use winit::{
     event::{Event, WindowEvent},
     event_loop::EventLoop,
@@ -16,6 +16,17 @@ pub fn chip8(width: u32, height: u32) {
     display.draw_pixel(0, 31);
 
     display.draw_pixel(63, 31);
+
+    let font = font::Font::new();
+    assert_eq!(
+        font.get_character(&'1').unwrap().clone(),
+        &[0x20, 0x60, 0x20, 0x20, 0x70]
+    );
+
+    let sprite = font.get_font_sprite(&'0').unwrap();
+    println!("font sprite: {:?}", sprite);
+
+    display.blit_drawable(&Point { x: 20, y: 20 }, sprite);
 
     chip8_program_loop(event_loop, display);
 }
