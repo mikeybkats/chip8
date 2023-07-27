@@ -96,14 +96,14 @@ impl Display {
         let mut draw_point = (self.width * 4 * dest.y) + dest.x * 4;
 
         let mut count = 0;
-        for i in 0..sprite.height() {
+        for _i in 0..sprite.height() {
             for j in 0..sprite.width() {
+                let loc = draw_point + (j * 4);
                 if sprite.pixels()[count] == 1 {
-                    // println!("draw point + j * 4: {}, j: {}", draw_point + j * 4, j);
-                    pixels_screen[draw_point + (j * 4)] = 0xE2;
-                    pixels_screen[draw_point + (j * 4) + 1] = 0x1B;
-                    pixels_screen[draw_point + (j * 4) + 2] = 0x88;
-                    pixels_screen[draw_point + (j * 4) + 3] = 0xff;
+                    pixels_screen[loc] = 0xE2;
+                    pixels_screen[loc + 1] = 0x1B;
+                    pixels_screen[loc + 2] = 0x88;
+                    pixels_screen[loc + 3] = 0xff;
                 }
                 count += 1;
             }

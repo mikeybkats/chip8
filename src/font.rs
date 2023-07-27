@@ -4,7 +4,7 @@ use crate::display::Drawable;
 
 #[derive(Debug)]
 pub struct FontSprite {
-    character: char,
+    pub character: char,
     width: usize,
     height: usize,
     pixels: Vec<u8>,
@@ -24,6 +24,9 @@ impl Drawable for FontSprite {
     }
 }
 
+/**
+ * Font the typeface program for chip 8
+ */
 pub struct Font<'a> {
     char_set: HashMap<char, &'a [u8; 5]>,
     sprites: HashMap<char, FontSprite>,
@@ -59,12 +62,16 @@ impl<'a> Font<'a> {
                 pixels: Self::convert_font_to_sprite(*val),
             };
 
-            sprites.insert(key.clone(), sprite);
+            sprites.insert(*key, sprite);
         }
 
         Font { char_set, sprites }
     }
 
+    /**
+     * get_character
+     * get a raw [u8; 5] character from the character set.
+     */
     pub fn get_character(&self, symbol: &char) -> Result<&&[u8; 5], String> {
         let character = self.char_set.get(symbol);
 
@@ -74,6 +81,12 @@ impl<'a> Font<'a> {
         }
     }
 
+    /**
+     * convert_font_to_sprite
+     * converts a raw [u8; 5] font character to an image sprite vector array
+     * the binary in the vector array represent the pixel map for the font
+     * fonts are 8 bits wide by 5 bits tall, but the last four bits of width are all zeros and only present to conform to the 8 bit architecture of chip 8.
+     */
     fn convert_font_to_sprite(font_symbol: &[u8]) -> Vec<u8> {
         let mut pixels: Vec<u8> = Vec::new();
         for row in font_symbol.iter() {
@@ -87,10 +100,13 @@ impl<'a> Font<'a> {
                 }
             }
         }
-        // println!("{:?}", pixels);
         pixels
     }
 
+    /**
+     * get_font_sprite
+     * returns the font sprite struct for the given character
+     */
     pub fn get_font_sprite(&self, symbol: &char) -> Option<&FontSprite> {
         self.sprites.get(symbol)
     }
