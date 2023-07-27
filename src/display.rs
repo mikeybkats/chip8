@@ -93,20 +93,21 @@ impl Display {
         let pixels_screen = viewport.frame_mut();
 
         // calculate the base point: where to draw the sprite
-        let mut draw_point = dest.y * self.width + dest.x;
+        let mut draw_point = (dest.y * self.width * 4) + dest.x;
 
+        let mut count = 0;
         for i in 0..sprite.height() {
-            draw_point = draw_point + (self.width * i);
+            draw_point += self.width * 4;
 
             for j in 0..sprite.width() {
-                draw_point = draw_point + j;
-
-                if sprite.pixels()[i + j] == 1 {
-                    pixels_screen[draw_point] = 0xE2;
-                    pixels_screen[draw_point + 1] = 0x1B;
-                    pixels_screen[draw_point + 2] = 0x88;
-                    pixels_screen[draw_point + 3] = 0xff;
+                if sprite.pixels()[count] == 1 {
+                    println!("draw point + j * 4: {}, j: {}", draw_point + j * 4, j);
+                    pixels_screen[draw_point + (j * 4)] = 0xE2;
+                    pixels_screen[draw_point + (j * 4) + 1] = 0x1B;
+                    pixels_screen[draw_point + (j * 4) + 2] = 0x88;
+                    pixels_screen[draw_point + (j * 4) + 3] = 0xff;
                 }
+                count += 1;
             }
         }
     }

@@ -17,15 +17,6 @@ fn main() {
     let memory = Memory::new();
     assert!(memory.length() == 4096);
 
-    let font = font::Font::new();
-    assert_eq!(
-        font.get_character(&'1').unwrap().clone(),
-        &[0x20, 0x60, 0x20, 0x20, 0x70]
-    );
-
-    let sprite = font.get_font_sprite(&'0').unwrap();
-    println!("font sprite: {:?}", sprite);
-
     // let mut program_counter = ProgramCounter::new();
     // assert_eq!(program_counter.get_count(), 0);
 

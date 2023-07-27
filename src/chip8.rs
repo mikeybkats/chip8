@@ -26,7 +26,7 @@ pub fn chip8(width: u32, height: u32) {
     let sprite = font.get_font_sprite(&'0').unwrap();
     println!("font sprite: {:?}", sprite);
 
-    display.blit_drawable(&Point { x: 20, y: 20 }, sprite);
+    display.blit_drawable(&Point { x: 0, y: 0 }, sprite);
 
     chip8_program_loop(event_loop, display);
 }
