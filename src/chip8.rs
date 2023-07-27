@@ -23,10 +23,19 @@ pub fn chip8(width: u32, height: u32) {
         &[0x20, 0x60, 0x20, 0x20, 0x70]
     );
 
-    let sprite = font.get_font_sprite(&'0').unwrap();
-    println!("font sprite: {:?}", sprite);
+    // println!("font sprite: {:?}", sprite);
 
-    display.blit_drawable(&Point { x: 0, y: 0 }, sprite);
+    // let sprite_0 = font.get_font_sprite(&'0').unwrap();
+    // display.blit_drawable(&Point { x: 2, y: 3 }, sprite_0);
+
+    let sprite_1 = font.get_font_sprite(&'1').unwrap();
+    // display.blit_drawable(&Point { x: 12, y: 11 }, sprite_1);
+
+    // let sprite_2 = font.get_font_sprite(&'2').unwrap();
+    // display.blit_drawable(&Point { x: 19, y: 3 }, sprite_2);
+
+    // let sprite_3 = font.get_font_sprite(&'3').unwrap();
+    // display.blit_drawable(&Point { x: 27, y: 3 }, sprite_3);
 
     chip8_program_loop(event_loop, display);
 }

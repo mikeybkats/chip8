@@ -84,13 +84,11 @@ impl<'a> Font<'a> {
                 }
             }
         }
-        // println!("{:?}", pixels);
+        println!("{:?}", pixels);
         pixels
     }
 
     pub fn get_font_sprite(&self, symbol: &char) -> Option<&FontSprite> {
-        // let character_arr = self.char_set.get(symbol);
-
         self.sprites.get(symbol)
     }
 }
