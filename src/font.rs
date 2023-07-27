@@ -4,6 +4,7 @@ use crate::display::Drawable;
 
 #[derive(Debug)]
 pub struct FontSprite {
+    character: char,
     width: usize,
     height: usize,
     pixels: Vec<u8>,
@@ -52,6 +53,7 @@ impl<'a> Font<'a> {
 
         for (key, val) in char_set.iter() {
             let sprite = FontSprite {
+                character: *key,
                 width: 8,
                 height: 5,
                 pixels: Self::convert_font_to_sprite(*val),
@@ -76,7 +78,8 @@ impl<'a> Font<'a> {
         let mut pixels: Vec<u8> = Vec::new();
         for row in font_symbol.iter() {
             // {:b} is binary format
-            let binary_string = format!("{:b}", row);
+            // {:08b} formats the number as 8-bit binary with leading zeros
+            let binary_string = format!("{:08b}", row);
 
             for bit in binary_string.chars() {
                 if let Some(bit_value) = bit.to_digit(2) {
@@ -84,7 +87,7 @@ impl<'a> Font<'a> {
                 }
             }
         }
-        println!("{:?}", pixels);
+        // println!("{:?}", pixels);
         pixels
     }
 
