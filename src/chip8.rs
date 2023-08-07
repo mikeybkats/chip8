@@ -1,4 +1,8 @@
-use crate::{display::Point, font, Display};
+use crate::{
+    draw::{Draw, Point},
+    font,
+};
+use chip8::{build_pixel_screen, build_window};
 use winit::{
     event::{Event, WindowEvent},
     event_loop::EventLoop,
@@ -6,15 +10,13 @@ use winit::{
 
 pub fn chip8(width: u32, height: u32) {
     let event_loop = EventLoop::new();
+    let scale = 20;
+    let window = build_window(width * scale, height * scale, &event_loop);
+    let mut viewport = build_pixel_screen(&window, width, height).unwrap();
+    let screen = viewport.frame_mut();
 
-    let mut display = Display::new(width as u32, height as u32, &event_loop);
+    test_print(width, height, screen);
 
-    test_print(&mut display);
-
-    chip8_program_loop(event_loop, display);
-}
-
-fn chip8_program_loop(event_loop: EventLoop<()>, display: Display) {
     event_loop.run(move |event, _, control_flow| {
         match event {
             Event::WindowEvent {
@@ -28,7 +30,8 @@ fn chip8_program_loop(event_loop: EventLoop<()>, display: Display) {
             Event::RedrawRequested(_) => {
                 // redraw state
                 println!("Redrawing");
-                display.redraw();
+                // self.redraw();
+                viewport.render().unwrap();
             }
             // handle other events...
             _ => {}
@@ -36,14 +39,16 @@ fn chip8_program_loop(event_loop: EventLoop<()>, display: Display) {
     });
 }
 
-fn test_print(display: &mut Display) {
-    display.draw_pixel(0, 0);
+fn test_print(width: u32, height: u32, screen: &mut [u8]) {
+    let mut draw = Draw::new(width, height, screen);
 
-    display.draw_pixel(63, 0);
+    draw.draw_pixel(0, 0);
 
-    display.draw_pixel(0, 31);
+    draw.draw_pixel(63, 0);
 
-    display.draw_pixel(63, 31);
+    draw.draw_pixel(0, 31);
+
+    draw.draw_pixel(63, 31);
 
     let font = font::Font::new();
     assert_eq!(
@@ -65,7 +70,7 @@ fn test_print(display: &mut Display) {
             x = 2 + count * 5;
             y = 10;
         }
-        display.blit_drawable(&Point { x, y }, font.get_font_sprite(&character).unwrap());
+        draw.blit_drawable(&Point { x, y }, font.get_font_sprite(&character).unwrap());
         count += 1;
     }
 }

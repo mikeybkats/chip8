@@ -17,11 +17,11 @@ pub fn clock_emulator(instructions: Vec<FnPointer>) {
         let mut end = false;
         for _ in 0..INSTRUCTIONS_PER_SECOND {
             if let Some(instruction) = instructions_iter.next() {
+                // Fetch and process the instruction
+                // Decode
+                // Execute
                 end = instruction();
             }
-            // Fetch and process the instruction
-            // Decode
-            // Execute
         }
 
         if end == true {
