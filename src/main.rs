@@ -35,16 +35,5 @@ fn main() {
 
     chip8(WIDTH, HEIGHT);
 
-    // fn instruction1() -> bool {
-    //     println!("Running instruction 1");
-    //     false
-    // }
-    // fn instruction2() -> bool {
-    //     println!("Running instruction 2");
-    //     true
-    // }
-    // let instructions = vec![instruction1, instruction2];
-
-    // clock_emulator(instructions);
-    // println!("exiting program");
+    println!("exiting program");
 }

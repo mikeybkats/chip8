@@ -1,24 +1,55 @@
+use std::{
+    thread,
+    time::{Duration, Instant},
+};
+
 use crate::{
     draw::{Draw, Point},
     font,
 };
 use chip8::{build_pixel_screen, build_window};
 use winit::{
-    event::{Event, WindowEvent},
+    event::{ElementState, Event, KeyboardInput, WindowEvent},
     event_loop::EventLoop,
 };
+
+const INSTRUCTIONS_PER_SECOND: u32 = 700;
+
+fn fetch() -> bool {
+    println!("Fetching");
+    false
+}
+fn decode() -> bool {
+    println!("Decoding");
+    false
+}
+fn execute() -> bool {
+    println!("Executing");
+    false
+}
 
 pub fn chip8(width: u32, height: u32) {
     let event_loop = EventLoop::new();
     let scale = 20;
     let window = build_window(width * scale, height * scale, &event_loop);
+
     let mut viewport = build_pixel_screen(&window, width, height).unwrap();
     let screen = viewport.frame_mut();
 
     test_print(width, height, screen);
 
     event_loop.run(move |event, _, control_flow| {
+        let delay = Duration::from_secs(1) / INSTRUCTIONS_PER_SECOND;
+
         match event {
+            Event::MainEventsCleared => {
+                // Run the fetch, decode, and execute cycle here
+                // for _ in 0..INSTRUCTIONS_PER_SECOND {
+                fetch();
+                decode();
+                execute();
+                // }
+            }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
                 ..
@@ -26,15 +57,34 @@ pub fn chip8(width: u32, height: u32) {
                 println!("The close button was pressed; stopping");
                 control_flow.set_exit();
             }
-            // handle RedrawRequested event
             Event::RedrawRequested(_) => {
-                // redraw state
                 println!("Redrawing");
-                // self.redraw();
                 viewport.render().unwrap();
             }
-            // handle other events...
+            Event::WindowEvent { event, window_id } if window_id == window.id() => match event {
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            state: ElementState::Pressed,
+                            virtual_keycode: Some(virtual_keycode),
+                            ..
+                        },
+                    ..
+                } => {
+                    println!("Key pressed: {:?}", virtual_keycode);
+                }
+                _ => {}
+            },
             _ => {}
+        }
+
+        let start_time = Instant::now();
+
+        let elapsed_time = start_time.elapsed();
+        if elapsed_time < delay {
+            thread::sleep(delay - elapsed_time);
+        } else {
+            println!("Took longer than expected to process instructions!");
         }
     });
 }
