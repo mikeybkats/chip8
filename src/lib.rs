@@ -1,4 +1,6 @@
 use pixels::{Error, Pixels, SurfaceTexture};
+// use std::fs::File;
+// use std::io::{self, BufReader, Read};
 use winit::{
     dpi::LogicalSize,
     event_loop::EventLoop,
@@ -29,4 +31,27 @@ pub fn build_pixel_screen(window: &Window, width: u32, height: u32) -> Result<Pi
 
     let viewport = Pixels::new(width, height, surface_texture)?;
     Ok(viewport)
+}
+
+pub fn fetch(
+    rom: &Vec<u8>,
+    rom_read_position: &mut usize,
+    rom_length: usize,
+) -> Result<u8, &'static str> {
+    if *rom_read_position < rom_length {
+        let instruction = rom[*rom_read_position];
+        *rom_read_position += 1;
+        Ok(instruction)
+    } else {
+        Err("No instruction")
+    }
+}
+
+pub fn decode(instruction: usize) -> bool {
+    // println!("Decoding");
+    false
+}
+pub fn execute(command: bool) -> bool {
+    // println!("Executing");
+    false
 }

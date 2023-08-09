@@ -1,5 +1,6 @@
 use std::{
-    thread,
+    fs::File,
+    io::{BufReader, Read},
     time::{Duration, Instant},
 };
 
@@ -7,28 +8,15 @@ use crate::{
     draw::{Draw, Point},
     font,
 };
-use chip8::{build_pixel_screen, build_window};
+use chip8::{build_pixel_screen, build_window, decode, fetch};
 use winit::{
     event::{ElementState, Event, KeyboardInput, WindowEvent},
-    event_loop::EventLoop,
+    event_loop::{ControlFlow, EventLoop},
 };
 
 const INSTRUCTIONS_PER_SECOND: u32 = 700;
 
-fn fetch() -> bool {
-    println!("Fetching");
-    false
-}
-fn decode() -> bool {
-    println!("Decoding");
-    false
-}
-fn execute() -> bool {
-    println!("Executing");
-    false
-}
-
-pub fn chip8(width: u32, height: u32) {
+pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     let event_loop = EventLoop::new();
     let scale = 20;
     let window = build_window(width * scale, height * scale, &event_loop);
@@ -36,19 +24,30 @@ pub fn chip8(width: u32, height: u32) {
     let mut viewport = build_pixel_screen(&window, width, height).unwrap();
     let screen = viewport.frame_mut();
 
+    ///////
     test_print(width, height, screen);
+    ///////
+
+    let time_per_instruction = Duration::from_secs(1) / INSTRUCTIONS_PER_SECOND;
+
+    let rom_length = rom.len();
+    println!("rom length: {}", rom_length);
+    let mut rom_read_position = 0;
 
     event_loop.run(move |event, _, control_flow| {
-        let delay = Duration::from_secs(1) / INSTRUCTIONS_PER_SECOND;
+        let start_time = Instant::now();
+
+        *control_flow = ControlFlow::WaitUntil(start_time + time_per_instruction);
 
         match event {
+            // Event::MainEventsCleared case signifies that all the events which were available up to the point of the last call to the event handler have been processed and the event loop is ready to proceed to the next phase of the loop's body.
             Event::MainEventsCleared => {
                 // Run the fetch, decode, and execute cycle here
-                // for _ in 0..INSTRUCTIONS_PER_SECOND {
-                fetch();
-                decode();
-                execute();
-                // }
+
+                // fetch
+                let instruction = fetch(&rom, &mut rom_read_position, rom_length).unwrap();
+                let command = decode(instruction);
+                // execute(command);
             }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
@@ -76,15 +75,6 @@ pub fn chip8(width: u32, height: u32) {
                 _ => {}
             },
             _ => {}
-        }
-
-        let start_time = Instant::now();
-
-        let elapsed_time = start_time.elapsed();
-        if elapsed_time < delay {
-            thread::sleep(delay - elapsed_time);
-        } else {
-            println!("Took longer than expected to process instructions!");
         }
     });
 }
