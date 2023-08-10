@@ -1,20 +1,36 @@
-use std::{
-    fs::File,
-    io::{BufReader, Read},
-    time::{Duration, Instant},
-};
+use std::time::{Duration, Instant};
 
 use crate::{
     draw::{Draw, Point},
     font,
+    program_counter::ProgramCounter,
 };
-use chip8::{build_pixel_screen, build_window, decode, fetch};
+use chip8::{build_pixel_screen, build_window, decode};
 use winit::{
     event::{ElementState, Event, KeyboardInput, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
 };
 
 const INSTRUCTIONS_PER_SECOND: u32 = 700;
+
+pub fn fetch(
+    rom: &Vec<u8>,
+    program_counter: &mut ProgramCounter,
+    rom_length: usize,
+) -> Option<u16> {
+    let index = program_counter.get_index() as usize;
+    if index < rom_length {
+        let instruction1 = rom[index];
+        program_counter.increment();
+        let instruction2 = rom[index];
+        program_counter.increment();
+
+        let instruction: u16 = ((instruction1 as u16) << 8) | instruction2 as u16;
+        Some(instruction)
+    } else {
+        None
+    }
+}
 
 pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     let event_loop = EventLoop::new();
@@ -32,7 +48,8 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
 
     let rom_length = rom.len();
     println!("rom length: {}", rom_length);
-    let mut rom_read_position = 0;
+    // let mut rom_read_position = 0;
+    let mut program_counter = ProgramCounter::new();
 
     event_loop.run(move |event, _, control_flow| {
         let start_time = Instant::now();
@@ -45,8 +62,14 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                 // Run the fetch, decode, and execute cycle here
 
                 // fetch
-                let instruction = fetch(&rom, &mut rom_read_position, rom_length).unwrap();
-                let command = decode(instruction);
+                match fetch(&rom, &mut program_counter, rom_length) {
+                    Some(integer) => {
+                        let hex_string = format!("{:X}", integer);
+                        println!("instruction: {}", hex_string);
+                    }
+                    _ => (),
+                }
+                // let command = decode(instruction);
                 // execute(command);
             }
             Event::WindowEvent {
