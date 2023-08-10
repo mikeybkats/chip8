@@ -1,7 +1,7 @@
 use std::{
     env,
     fs::File,
-    io::{self, Read},
+    io::{self, Read, Write},
     process,
 };
 
@@ -11,6 +11,7 @@ mod chip8;
 mod components;
 mod draw;
 mod font;
+mod memory;
 mod program_counter;
 
 pub const WIDTH: u32 = 64;
@@ -21,6 +22,12 @@ fn read_rom(path: String) -> io::Result<Vec<u8>> {
     let mut buffer = Vec::new();
 
     file.read_to_end(&mut buffer)?;
+
+    // let file_path = "roms/output.txt";
+    // let mut file_out = File::create(file_path)?;
+    // let hex_string: String = buffer.iter().map(|&byte| format!("{:02X}", byte)).collect();
+    // file_out.write_all(hex_string.as_bytes())?;
+    // file_out.flush()?;
 
     Ok(buffer)
 }

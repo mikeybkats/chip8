@@ -18,7 +18,6 @@ impl Draw<'_> {
 
         for (i, pixel) in self.screen.chunks_exact_mut(4).enumerate() {
             if i == base_point {
-                println!("Copying to slice");
                 pixel[0..4].copy_from_slice(&[0xE2, 0x1B, 0x88, 0xff]);
             }
         }

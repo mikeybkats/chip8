@@ -12,8 +12,8 @@ impl ProgramCounter {
         self.index
     }
 
-    pub fn get_index(&self) -> u16 {
-        self.index
+    pub fn get_index(&self) -> usize {
+        self.index as usize
     }
 }
 #[cfg(test)]
