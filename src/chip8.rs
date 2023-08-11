@@ -3,10 +3,10 @@ use std::time::{Duration, Instant};
 use crate::{
     draw::{Draw, Point},
     font,
-    memory::{self, Memory},
+    memory::Memory,
     program_counter::ProgramCounter,
 };
-use chip8::{build_pixel_screen, build_window, decode};
+use chip8::{build_pixel_screen, build_window, decode, execute};
 use winit::{
     event::{ElementState, Event, KeyboardInput, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
@@ -32,6 +32,17 @@ pub fn fetch(
     }
 }
 
+pub fn fetch_instruction(
+    rom: &Vec<u8>,
+    program_counter: &mut ProgramCounter,
+    rom_length: usize,
+) -> String {
+    match fetch(&rom, program_counter, rom_length) {
+        Some(integer) => format!("{:X}", integer),
+        _ => String::from("0000"),
+    }
+}
+
 pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     let event_loop = EventLoop::new();
     let scale = 20;
@@ -53,6 +64,8 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     );
 
     let mut program_counter = ProgramCounter::new();
+
+    // TODO: implement memory and stack pointer
     let mut _memory = Memory::new();
 
     event_loop.run(move |event, _, control_flow| {
@@ -63,24 +76,14 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
         match event {
             // Event::MainEventsCleared case signifies that all the events which were available up to the point of the last call to the event handler have been processed and the event loop is ready to proceed to the next phase of the loop's body.
             Event::MainEventsCleared => {
-                // Run the fetch, decode, and execute cycle here
-
                 // fetch
-                match fetch(&rom, &mut program_counter, rom_length) {
-                    Some(integer) => {
-                        let hex_string = format!("{:X}", integer);
-                        if program_counter.get_index() < 10 {
-                            println!(
-                                "instruction: {}, index: {}",
-                                hex_string,
-                                program_counter.get_index()
-                            );
-                        }
-                    }
-                    _ => (),
-                }
-                // let command = decode(instruction);
-                // execute(command);
+                let instruction = fetch_instruction(&rom, &mut program_counter, rom_length);
+
+                // decode
+                let command = decode(instruction);
+
+                // execute
+                execute(command);
             }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,

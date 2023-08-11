@@ -31,11 +31,32 @@ pub fn build_pixel_screen(window: &Window, width: u32, height: u32) -> Result<Pi
     Ok(viewport)
 }
 
-pub fn decode(instruction: u8) -> bool {
+pub fn decode(instruction: String) -> bool {
     // println!("Decoding");
+    let case = instruction.chars().nth(0).unwrap();
+
+    match case {
+        '0' => (),
+        '1' => (),
+        '2' => (),
+        '3' => (),
+        '4' => (),
+        '5' => (),
+        '6' => (),
+        '7' => (),
+        '8' => (),
+        '9' => (),
+        'A' => (),
+        'B' => (),
+        'C' => (),
+        'D' => (),
+        'E' => (),
+        'F' => (),
+        _ => (),
+    }
     false
 }
-pub fn execute(command: bool) -> bool {
+pub fn execute(_command: bool) -> bool {
     // println!("Executing");
     false
 }

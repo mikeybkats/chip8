@@ -17,25 +17,25 @@ pub struct DelayTimer {
 }
 
 impl DelayTimer {
-    pub fn new() -> DelayTimer {
+    pub fn _new() -> DelayTimer {
         DelayTimer {
             register: false,
             dt: 60,
         }
     }
 
-    pub fn set_timer(&mut self, run: bool) {
+    pub fn _set_timer(&mut self, run: bool) {
         self.register = run;
-        self.update();
+        self._update();
     }
 
-    pub fn get_time(&self) -> u8 {
+    pub fn _get_time(&self) -> u8 {
         self.dt
     }
 
-    fn update(&mut self) {
+    fn _update(&mut self) {
         if self.register == true {
-            self.run_timer()
+            self._run_timer()
         }
     }
 
@@ -56,7 +56,7 @@ impl DelayTimer {
            }
        }
     */
-    fn run_timer(&mut self) {
+    fn _run_timer(&mut self) {
         let delay = Duration::from_secs_f32(1.0 / 60.0);
 
         loop {
