@@ -1,4 +1,5 @@
-// Display: 64 x 32 pixels (or 128 x 64 for SUPER-CHIP) monochrome, ie. black or white
+// Draw provides basic drawing capabilities for blitting drawables to the chip8 display
+// Display 64 x 32 pixels monochrome
 pub struct Draw<'a> {
     width: usize,
     height: usize,
@@ -13,8 +14,12 @@ impl Draw<'_> {
         }
     }
 
-    pub fn draw_pixel(&mut self, x: usize, y: usize) {
-        let base_point = (y * (self.width as usize)) + x as usize;
+    /* Draws pixel to x, y coordinates  */
+    pub fn draw_pixel(&mut self, dest: &Point) {
+        assert!(dest.x <= self.width);
+        assert!(dest.y <= self.height);
+
+        let base_point = (dest.y * (self.width as usize)) + dest.x as usize;
 
         for (i, pixel) in self.screen.chunks_exact_mut(4).enumerate() {
             if i == base_point {
@@ -23,6 +28,7 @@ impl Draw<'_> {
         }
     }
 
+    /* blits the sprit to the viewport */
     // blit is shorthand for bit block transfer
     // it refers to the operation of copying a block of data to a block of pixels in memory
     pub fn blit_drawable<'a, E>(&mut self, dest: &Point, sprite: &E)
@@ -52,14 +58,14 @@ impl Draw<'_> {
     }
 }
 
-/// Drawables can be blitted to the pixel buffer and animated.
+/*  Drawables can be blitted to the pixel buffer and animated. */
 pub trait Drawable {
     fn width(&self) -> usize;
     fn height(&self) -> usize;
     fn pixels(&self) -> &[u8];
 }
 
-/// A tiny position vector.
+/* A position vector */
 pub struct Point {
     pub x: usize,
     pub y: usize,

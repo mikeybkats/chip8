@@ -1,72 +1,34 @@
 use std::time::{Duration, Instant};
 
-use crate::{
-    draw::{Draw, Point},
-    font,
-    memory::Memory,
-    program_counter::ProgramCounter,
-};
-use chip8::{build_pixel_screen, build_window, decode, execute};
 use winit::{
     event::{ElementState, Event, KeyboardInput, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
 };
 
-const INSTRUCTIONS_PER_SECOND: u32 = 700;
-
-pub fn fetch(
-    rom: &Vec<u8>,
-    program_counter: &mut ProgramCounter,
-    rom_length: usize,
-) -> Option<u16> {
-    if program_counter.get_index() < rom_length - 1 {
-        let instruction1 = rom[program_counter.get_index()];
-        program_counter.increment();
-        let instruction2 = rom[program_counter.get_index()];
-        program_counter.increment();
-
-        let instruction: u16 = ((instruction1 as u16) << 8) | instruction2 as u16;
-        Some(instruction)
-    } else {
-        None
-    }
-}
-
-pub fn fetch_instruction(
-    rom: &Vec<u8>,
-    program_counter: &mut ProgramCounter,
-    rom_length: usize,
-) -> String {
-    match fetch(&rom, program_counter, rom_length) {
-        Some(integer) => format!("{:X}", integer),
-        _ => String::from("0000"),
-    }
-}
+use crate::{
+    memory::Memory,
+    program_counter::ProgramCounter,
+    utils::{build_pixel_screen, build_window, decode, execute, fetch_instruction, test_print},
+};
 
 pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
+    const INSTRUCTIONS_PER_SECOND: u32 = 700;
     let event_loop = EventLoop::new();
     let scale = 20;
     let window = build_window(width * scale, height * scale, &event_loop);
-
     let mut viewport = build_pixel_screen(&window, width, height).unwrap();
     let screen = viewport.frame_mut();
+    let time_per_instruction = Duration::from_secs(1) / INSTRUCTIONS_PER_SECOND;
+    let rom_length = rom.len();
+    let mut program_counter = ProgramCounter::new();
+
+    // TODO: implement memory and stack pointer
+    let memory = Memory::new();
+    let memory_rom = memory.set_rom(&rom).unwrap();
 
     ///////
     test_print(width, height, screen);
     ///////
-
-    let time_per_instruction = Duration::from_secs(1) / INSTRUCTIONS_PER_SECOND;
-
-    let rom_length = rom.len();
-    println!(
-        "rom length: {}, rom [0,1]:  [{}, {}]",
-        rom_length, rom[0], rom[1]
-    );
-
-    let mut program_counter = ProgramCounter::new();
-
-    // TODO: implement memory and stack pointer
-    let mut _memory = Memory::new();
 
     event_loop.run(move |event, _, control_flow| {
         let start_time = Instant::now();
@@ -77,7 +39,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
             // Event::MainEventsCleared case signifies that all the events which were available up to the point of the last call to the event handler have been processed and the event loop is ready to proceed to the next phase of the loop's body.
             Event::MainEventsCleared => {
                 // fetch
-                let instruction = fetch_instruction(&rom, &mut program_counter, rom_length);
+                let instruction = fetch_instruction(&memory_rom, &mut program_counter, rom_length);
 
                 // decode
                 let command = decode(instruction);
@@ -112,40 +74,4 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
             _ => {}
         }
     });
-}
-
-fn test_print(width: u32, height: u32, screen: &mut [u8]) {
-    let mut draw = Draw::new(width, height, screen);
-
-    draw.draw_pixel(0, 0);
-
-    draw.draw_pixel(63, 0);
-
-    draw.draw_pixel(0, 31);
-
-    draw.draw_pixel(63, 31);
-
-    let font = font::Font::new();
-    assert_eq!(
-        font.get_character(&'1').unwrap().clone(),
-        &[0x20, 0x60, 0x20, 0x20, 0x70]
-    );
-
-    let char_set = [
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
-    ];
-
-    let mut count = 0;
-    let mut y = 3;
-    for character in char_set {
-        let mut x = 2 + (count * 5);
-        // if count == 10 start the second row to print letters A through F
-        if count == 10 {
-            count = 0;
-            x = 2 + count * 5;
-            y = 10;
-        }
-        draw.blit_drawable(&Point { x, y }, font.get_font_sprite(&character).unwrap());
-        count += 1;
-    }
 }

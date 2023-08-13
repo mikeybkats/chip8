@@ -11,7 +11,7 @@ use std::time::Duration;
 
 // // An 8-bit delay timer which is decremented at a rate of 60 Hz (60 times per second) until it reaches 0
 // The delay timer is active whenever the delay timer register (DT) is non-zero. This timer does nothing more than subtract 1 from the value of DT at a rate of 60Hz. When DT reaches 0, it deactivates.
-pub struct DelayTimer {
+struct DelayTimer {
     register: bool,
     dt: u8,
 }

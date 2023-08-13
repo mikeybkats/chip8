@@ -1,7 +1,7 @@
 use std::{
     env,
     fs::File,
-    io::{self, Read, Write},
+    io::{self, Read},
     process,
 };
 
@@ -13,6 +13,7 @@ mod draw;
 mod font;
 mod memory;
 mod program_counter;
+mod utils;
 
 pub const WIDTH: u32 = 64;
 pub const HEIGHT: u32 = 32;
@@ -41,7 +42,6 @@ fn main() {
         process::exit(1);
     });
 
-    println!("{}", rom_file_path);
     let rom = read_rom(rom_file_path).unwrap();
 
     chip8(WIDTH, HEIGHT, rom);
