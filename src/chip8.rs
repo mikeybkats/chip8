@@ -7,7 +7,7 @@ use winit::{
 
 use crate::{
     display::{build_pixels, build_window},
-    emulator::{decode, execute, fetch_instruction, test_print},
+    emulator::{fetch_instruction, test_print},
     memory::Memory,
     program_counter::ProgramCounter,
 };
@@ -42,11 +42,11 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
             Event::MainEventsCleared => {
                 // fetch
                 let rom_length = rom.len();
-                let instruction = fetch_instruction(&memory_rom, &mut program_counter, rom_length);
+                let _instruction = fetch_instruction(&memory_rom, &mut program_counter, rom_length);
                 // decode
-                let command = decode(instruction);
+                // let command = decode(instruction);
                 // execute
-                execute(command);
+                // execute(command);
             }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
