@@ -9,11 +9,12 @@ use crate::chip8::chip8;
 
 mod chip8;
 mod components;
+mod display;
 mod draw;
+mod emulator;
 mod font;
 mod memory;
 mod program_counter;
-mod utils;
 
 pub const WIDTH: u32 = 64;
 pub const HEIGHT: u32 = 32;

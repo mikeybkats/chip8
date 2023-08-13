@@ -6,20 +6,22 @@ use winit::{
 };
 
 use crate::{
+    display::{build_pixels, build_window},
+    emulator::{decode, execute, fetch_instruction, test_print},
     memory::Memory,
     program_counter::ProgramCounter,
-    utils::{build_pixel_screen, build_window, decode, execute, fetch_instruction, test_print},
 };
 
 pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
-    const INSTRUCTIONS_PER_SECOND: u32 = 700;
     let event_loop = EventLoop::new();
     let scale = 20;
     let window = build_window(width * scale, height * scale, &event_loop);
-    let mut viewport = build_pixel_screen(&window, width, height).unwrap();
-    let screen = viewport.frame_mut();
+    let mut pixels = build_pixels(&window, width, height).unwrap();
+    let screen = pixels.frame_mut();
+
+    const INSTRUCTIONS_PER_SECOND: u32 = 700;
     let time_per_instruction = Duration::from_secs(1) / INSTRUCTIONS_PER_SECOND;
-    let rom_length = rom.len();
+
     let mut program_counter = ProgramCounter::new();
 
     // TODO: implement memory and stack pointer
@@ -39,11 +41,10 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
             // Event::MainEventsCleared case signifies that all the events which were available up to the point of the last call to the event handler have been processed and the event loop is ready to proceed to the next phase of the loop's body.
             Event::MainEventsCleared => {
                 // fetch
+                let rom_length = rom.len();
                 let instruction = fetch_instruction(&memory_rom, &mut program_counter, rom_length);
-
                 // decode
                 let command = decode(instruction);
-
                 // execute
                 execute(command);
             }
@@ -55,7 +56,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                 control_flow.set_exit();
             }
             Event::RedrawRequested(_) => {
-                viewport.render().unwrap();
+                pixels.render().unwrap();
             }
             Event::WindowEvent { event, window_id } if window_id == window.id() => match event {
                 WindowEvent::KeyboardInput {
