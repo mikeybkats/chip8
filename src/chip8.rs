@@ -7,9 +7,10 @@ use winit::{
 
 use crate::{
     display::{build_pixels, build_window},
-    emulator::{fetch_instruction, test_print},
+    emulator::{execute, fetch_instruction, test_print},
     memory::Memory,
     program_counter::ProgramCounter,
+    stack::Stack,
 };
 
 pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
@@ -25,8 +26,10 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     let mut program_counter = ProgramCounter::new();
 
     // TODO: implement memory and stack pointer
-    let memory = Memory::new();
+    let mut memory = Memory::new();
     let memory_rom = memory.set_rom(&rom).unwrap();
+    let stack_memory_block = memory.get_interpreter_slice();
+    let stack_pointer = Stack::new(stack_memory_block);
 
     ///////
     test_print(width, height, screen);
@@ -46,7 +49,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                 // decode
                 // let command = decode(instruction);
                 // execute
-                // execute(command);
+                // execute(_instruction, &stack_pointer);
             }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,

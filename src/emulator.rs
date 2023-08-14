@@ -2,9 +2,11 @@ use crate::{
     draw::{Draw, Point},
     font::Font,
     program_counter::ProgramCounter,
+    stack::Stack,
 };
 
-pub fn execute(instruction: String) -> bool {
+// TODO: how does execute get access to all the methods it needs?
+pub fn execute(instruction: String, stack: &Stack) -> bool {
     // println!("Decoding");
     /*
      * NNN: address

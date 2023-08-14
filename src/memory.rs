@@ -43,8 +43,12 @@ impl Memory {
         self.ram[address] = value;
     }
 
+    pub fn get_interpreter_slice(&mut self) -> &mut [u8] {
+        &mut self.ram[0..512]
+    }
+
     /** Sets a rom to the program space in the chip8 memory */
-    pub fn set_rom(mut self, rom: &Vec<u8>) -> Result<[u8; 4096], String> {
+    pub fn set_rom(&mut self, rom: &Vec<u8>) -> Result<[u8; 4096], String> {
         let rom_len = rom.len();
         let end_index = 512 + rom_len;
         if rom_len <= self.ram.len() - 512 {
