@@ -1,3 +1,5 @@
+What is Chip-8 --> From ChatGPT:
+
 The CHIP-8 is an interpreted programming language designed for early video game development. It was used primarily in the late 1970s and early 1980s. It has a simple set of instructions and a 4K memory space. Here's a breakdown of how CHIP-8 instructions work:
 
 1. **Memory Layout:**
