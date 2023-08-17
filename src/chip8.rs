@@ -13,6 +13,10 @@ use crate::{
     stack::Stack,
 };
 
+// extern "C" {
+//     static mut MEMORY: Memory;
+// }
+
 pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     let event_loop = EventLoop::new();
     let scale = 20;
@@ -23,18 +27,17 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     const INSTRUCTIONS_PER_SECOND: u32 = 700;
     let time_per_instruction = Duration::from_secs(1) / INSTRUCTIONS_PER_SECOND;
 
-    let mut program_counter = ProgramCounter::new();
-
-    // TODO: implement memory and stack pointer
     let mut memory = Memory::new();
     let memory_rom = memory.set_rom(&rom).unwrap();
-    let stack_memory_block = memory.get_interpreter_slice();
-    let stack_pointer = Stack::new(stack_memory_block);
+
+    let mut stack_pointer = Stack::new(&mut memory.get_stack_memory_block());
+    let mut program_counter = ProgramCounter::new(&mut memory.get_rom_memory_block());
 
     ///////
     test_print(width, height, screen);
     ///////
 
+    // main event loop
     event_loop.run(move |event, _, control_flow| {
         let start_time = Instant::now();
 
@@ -49,7 +52,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                 // decode
                 // let command = decode(instruction);
                 // execute
-                // execute(_instruction, &stack_pointer);
+                execute(_instruction, &stack_pointer);
             }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,

@@ -15,6 +15,7 @@ mod emulator;
 mod font;
 mod memory;
 mod program_counter;
+mod registers;
 mod stack;
 
 pub const WIDTH: u32 = 64;

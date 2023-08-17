@@ -24,6 +24,8 @@
 +---------------+= 0x000 (0) Start of Chip-8 RAM
 */
 
+// static mut RAM: [u8; 4096] = [0; 4096];
+
 pub struct Memory {
     ram: [u8; 4096],
 }
@@ -43,8 +45,12 @@ impl Memory {
         self.ram[address] = value;
     }
 
-    pub fn get_interpreter_slice(&mut self) -> &mut [u8] {
+    pub fn get_stack_memory_block(&mut self) -> &mut [u8] {
         &mut self.ram[0..512]
+    }
+
+    pub fn get_rom_memory_block(&mut self) -> &mut [u8] {
+        &mut self.ram[512..]
     }
 
     /** Sets a rom to the program space in the chip8 memory */
