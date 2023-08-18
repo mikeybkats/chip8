@@ -1,12 +1,12 @@
-pub struct Stack<'a> {
+pub struct Stack {
     sp: usize,
-    stack: &'a mut [u8],
+    stack: [u8; 512],
 }
-impl<'a> Stack<'a> {
-    pub fn new(stack_memory: &'a mut [u8]) -> Stack<'a> {
+impl Stack {
+    pub fn new() -> Stack {
         Stack {
             sp: 0,
-            stack: stack_memory,
+            stack: [0; 512],
         }
     }
 

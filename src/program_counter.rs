@@ -1,13 +1,13 @@
 // A program counter, often called just “PC”, which points at the current instruction in memory
-pub struct ProgramCounter<'a> {
+pub struct ProgramCounter {
     pc: usize,
-    rom: &'a mut [u8],
+    // rom: [u8; 3584],
 }
-impl<'a> ProgramCounter<'a> {
-    pub fn new(rom_memory: &'a mut [u8]) -> ProgramCounter {
+impl ProgramCounter {
+    pub fn new() -> ProgramCounter {
         ProgramCounter {
             pc: 0,
-            rom: rom_memory,
+            // rom: [0; 3584],
         }
     }
 
@@ -16,6 +16,7 @@ impl<'a> ProgramCounter<'a> {
         self.pc
     }
 
+    // gets the location of the program counter
     pub fn get_pc(&self) -> usize {
         self.pc as usize
     }
@@ -27,16 +28,16 @@ mod program_counter_tests {
 
     #[test]
     fn can_create() {
-        let mut memory = [0 as u8; 1000];
-        let pc = ProgramCounter::new(&mut memory);
+        // let mut memory = [0 as u8; 1000];
+        let pc = ProgramCounter::new();
 
         assert!(pc.get_pc() == 0);
     }
 
     #[test]
     fn can_increment() {
-        let mut memory = [0 as u8; 1000];
-        let mut pc = ProgramCounter::new(&mut memory);
+        // let mut memory = [0 as u8; 1000];
+        let mut pc = ProgramCounter::new();
 
         println!("the count is: {}", pc.pc);
         assert!(pc.pc == 0);
@@ -51,8 +52,8 @@ mod program_counter_tests {
 
     #[test]
     fn can_clear() {
-        let mut memory = [0 as u8; 1000];
-        let mut pc = ProgramCounter::new(&mut memory);
+        // let mut memory = [0 as u8; 1000];
+        let mut pc = ProgramCounter::new();
 
         pc.increment(); // 1
         pc.increment(); // 2

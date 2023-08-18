@@ -45,13 +45,13 @@ impl Memory {
         self.ram[address] = value;
     }
 
-    pub fn get_stack_memory_block(&mut self) -> &mut [u8] {
-        &mut self.ram[0..512]
-    }
+    // pub fn get_stack_memory(&mut self) -> &mut [u8] {
+    //     &mut self.ram[0..512]
+    // }
 
-    pub fn get_rom_memory_block(&mut self) -> &mut [u8] {
-        &mut self.ram[512..]
-    }
+    // pub fn get_rom_memory(&mut self) -> &mut [u8] {
+    //     &mut self.ram[512..]
+    // }
 
     /** Sets a rom to the program space in the chip8 memory */
     pub fn set_rom(&mut self, rom: &Vec<u8>) -> Result<[u8; 4096], String> {

@@ -26,17 +26,32 @@ pub fn execute(instruction: String, stack: &Stack) -> bool {
     let case = instruction.chars().nth(0).unwrap();
 
     match case {
-        // 0 Calls machine code routine at address NNN - may not be needed for emulator
+        // 0 Calls machine code routine at address NNN - not be needed for emulator
         '0' => (),
 
         // 1NNN Jumps to address at NNN
-        '1' => (),
+        '1' => (
+            // 178D
+            // 1
+            // 7
+            // 8
+            // 13
+
+        ),
 
         // 2NNN Calls subroutine at NNN
         '2' => (),
 
         // 3XNN Skips the next instruction if VX equals NN (usually the next instruction is a jump to skip a code block).
-        '3' => (),
+        '3' => {
+            println!("instruction chars: {:?}", instruction.chars().nth(1));
+            // let vx = instruction.chars().nth(1).unwrap() as u32;
+            // 3C42 =
+            // 3
+            // 12 = VX
+            // 4
+            // 2
+        }
 
         // 4XNN Skips the next instruction if VX does not equal NN (usually the next instruction is a jump to skip a code block).
         '4' => (),
@@ -104,10 +119,10 @@ pub fn _decode(_command: bool) -> bool {
 
 /* Fetches the program instruction from the chip8 Rom */
 pub fn fetch(rom: &[u8], program_counter: &mut ProgramCounter, rom_length: usize) -> Option<u16> {
-    if program_counter.get_index() < rom_length - 1 {
-        let instruction1 = rom[program_counter.get_index()];
+    if program_counter.get_pc() < rom_length - 1 {
+        let instruction1 = rom[program_counter.get_pc()];
         program_counter.increment();
-        let instruction2 = rom[program_counter.get_index()];
+        let instruction2 = rom[program_counter.get_pc()];
         program_counter.increment();
 
         let instruction: u16 = ((instruction1 as u16) << 8) | instruction2 as u16;
