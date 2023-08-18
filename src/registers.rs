@@ -22,7 +22,7 @@ enum GeneralRegisters {
     VF,
 }
 
-struct Registers {
+pub struct Registers {
     registers: HashMap<GeneralRegisters, u16>,
 }
 impl Registers {
@@ -48,7 +48,7 @@ impl Registers {
         Registers { registers }
     }
 
-    fn set_register(&mut self, register: GeneralRegisters, value: u16) {
+    pub fn set_register(&mut self, register: GeneralRegisters, value: u16) {
         if value <= 0xF {
             self.registers.insert(register, value);
         } else {
@@ -56,7 +56,7 @@ impl Registers {
         }
     }
 
-    fn get_register(&self, register: GeneralRegisters) -> Option<&u16> {
+    pub fn get_register(&self, register: GeneralRegisters) -> Option<&u16> {
         self.registers.get(&register)
     }
 }

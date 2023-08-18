@@ -2,11 +2,12 @@ use crate::{
     draw::{Draw, Point},
     font::Font,
     program_counter::ProgramCounter,
+    registers::{self, Registers},
     stack::Stack,
 };
 
 // TODO: how does execute get access to all the methods it needs?
-pub fn execute(instruction: String, stack: &Stack) -> bool {
+pub fn execute(instruction: String, stack: &Stack, registers: &Registers) -> bool {
     // println!("Decoding");
     /*
      * NNN: address
@@ -30,27 +31,25 @@ pub fn execute(instruction: String, stack: &Stack) -> bool {
         '0' => (),
 
         // 1NNN Jumps to address at NNN
-        '1' => (
+        '1' => {
             // 178D
-            // 1
-            // 7
-            // 8
-            // 13
-
-        ),
+            let _nnn = &instruction[1..3];
+        }
 
         // 2NNN Calls subroutine at NNN
-        '2' => (),
+        '2' => {
+            let _nnn = &instruction[1..3];
+        }
 
-        // 3XNN Skips the next instruction if VX equals NN (usually the next instruction is a jump to skip a code block).
+        // 3xkk - SE Vx, byte
+        // Skip next instruction if Vx = kk.
+        // The interpreter compares register Vx to kk, and if they are equal, increments the program counter by 2
         '3' => {
-            println!("instruction chars: {:?}", instruction.chars().nth(1));
-            // let vx = instruction.chars().nth(1).unwrap() as u32;
-            // 3C42 =
-            // 3
-            // 12 = VX
-            // 4
-            // 2
+            // println!("instruction chars: {:?}", instruction.chars());
+            // 3C42
+            let register = instruction.chars().nth(1).unwrap() as u32;
+            let _vx = registers.get_register(register);
+            let _kk = &instruction[2..3];
         }
 
         // 4XNN Skips the next instruction if VX does not equal NN (usually the next instruction is a jump to skip a code block).
@@ -118,14 +117,18 @@ pub fn _decode(_command: bool) -> bool {
 }
 
 /* Fetches the program instruction from the chip8 Rom */
-pub fn fetch(rom: &[u8], program_counter: &mut ProgramCounter, rom_length: usize) -> Option<u16> {
+pub fn fetch(
+    rom: &Vec<u8>,
+    program_counter: &mut ProgramCounter,
+    rom_length: usize,
+) -> Option<u16> {
     if program_counter.get_pc() < rom_length - 1 {
-        let instruction1 = rom[program_counter.get_pc()];
+        let instruction1 = *rom.get(program_counter.get_pc()).unwrap() as u16;
         program_counter.increment();
-        let instruction2 = rom[program_counter.get_pc()];
+        let instruction2 = *rom.get(program_counter.get_pc()).unwrap() as u16;
         program_counter.increment();
 
-        let instruction: u16 = ((instruction1 as u16) << 8) | instruction2 as u16;
+        let instruction: u16 = (instruction1 << 8) | instruction2;
         Some(instruction)
     } else {
         None
@@ -134,12 +137,13 @@ pub fn fetch(rom: &[u8], program_counter: &mut ProgramCounter, rom_length: usize
 
 /* Fetches and formats the program instruction from the chip8 Rom */
 pub fn fetch_instruction(
-    rom: &[u8],
+    rom: &Vec<u8>,
     program_counter: &mut ProgramCounter,
     rom_length: usize,
 ) -> String {
     match fetch(&rom, program_counter, rom_length) {
-        Some(integer) => format!("{:X}", integer),
+        // :04X specifies a width of 4 with leading zeros
+        Some(integer) => format!("{:04X}", integer),
         _ => String::from("0000"),
     }
 }
