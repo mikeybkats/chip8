@@ -35,13 +35,10 @@ pub fn execute(instruction: u16, _stack: &Stack, registers: &Registers) -> bool 
         // 1NNN Jumps to address at NNN
         0x1 => {
             // 178D
-            let _nnn = &instruction[1..3];
         }
 
         // 2NNN Calls subroutine at NNN
-        0x2 => {
-            let _nnn = &instruction[1..3];
-        }
+        0x2 => {}
 
         // 3xkk - SE Vx, byte
         // Skip next instruction if Vx = kk.
@@ -55,10 +52,7 @@ pub fn execute(instruction: u16, _stack: &Stack, registers: &Registers) -> bool 
             let vx = registers.get_register(register).unwrap();
             println!("vx: {}", vx);
 
-            // let instruction_character_2 = instruction.chars().nth(2).unwrap();
-            // let instruction_character_3 = instruction.chars().nth(3).unwrap();
-            // let kk = format!("{}{}", instruction_character_2, instruction_character_3);
-            let kk = &instruction[2..4];
+            // let kk = &instruction[2..4];
             println!("kk: {}", kk);
 
             if kk == vx {}
