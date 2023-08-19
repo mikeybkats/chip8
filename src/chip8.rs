@@ -9,6 +9,7 @@ use crate::{
     display::{build_pixels, build_window},
     emulator::{execute, fetch_instruction, test_print},
     program_counter::ProgramCounter,
+    registers::Registers,
     stack::Stack,
 };
 
@@ -29,6 +30,8 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     let stack = Stack::new();
     let mut program_counter = ProgramCounter::new();
 
+    let registers = Registers::new();
+
     ///////
     test_print(width, height, screen);
     ///////
@@ -48,7 +51,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                 // decode
                 // let command = decode(instruction);
                 // execute
-                execute(instruction, &stack);
+                execute(instruction, &stack, &registers);
             }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,

@@ -7,7 +7,7 @@ use crate::{
 };
 
 // TODO: how does execute get access to all the methods it needs?
-pub fn execute(instruction: String, stack: &Stack, registers: &Registers) -> bool {
+pub fn execute(instruction: u16, _stack: &Stack, registers: &Registers) -> bool {
     // println!("Decoding");
     /*
      * NNN: address
@@ -24,47 +24,59 @@ pub fn execute(instruction: String, stack: &Stack, registers: &Registers) -> boo
      * NN: The second byte (third and fourth nibbles). An 8-bit immediate number.
      * NNN: The second, third and fourth nibbles. A 12-bit immediate memory address.
      */
-    let case = instruction.chars().nth(0).unwrap();
+    // let case = instruction.chars().nth(0).unwrap();
 
-    match case {
+    let first_nibble = (instruction >> 12) & 0xF;
+
+    match first_nibble {
         // 0 Calls machine code routine at address NNN - not be needed for emulator
-        '0' => (),
+        0x0 => (),
 
         // 1NNN Jumps to address at NNN
-        '1' => {
+        0x1 => {
             // 178D
             let _nnn = &instruction[1..3];
         }
 
         // 2NNN Calls subroutine at NNN
-        '2' => {
+        0x2 => {
             let _nnn = &instruction[1..3];
         }
 
         // 3xkk - SE Vx, byte
         // Skip next instruction if Vx = kk.
         // The interpreter compares register Vx to kk, and if they are equal, increments the program counter by 2
-        '3' => {
-            // println!("instruction chars: {:?}", instruction.chars());
+        0x3 => {
             // 3C42
-            let register = instruction.chars().nth(1).unwrap() as u32;
-            let _vx = registers.get_register(register);
-            let _kk = &instruction[2..3];
+            println!("instruction chars: {:?}", instruction.chars());
+            let register = instruction.chars().nth(1).unwrap();
+            println!("register: {}", register);
+
+            let vx = registers.get_register(register).unwrap();
+            println!("vx: {}", vx);
+
+            // let instruction_character_2 = instruction.chars().nth(2).unwrap();
+            // let instruction_character_3 = instruction.chars().nth(3).unwrap();
+            // let kk = format!("{}{}", instruction_character_2, instruction_character_3);
+            let kk = &instruction[2..4];
+            println!("kk: {}", kk);
+
+            if kk == vx {}
         }
 
         // 4XNN Skips the next instruction if VX does not equal NN (usually the next instruction is a jump to skip a code block).
-        '4' => (),
+        0x4 => (),
 
         // 5XY0 Skips the next instruction if VX equals VY (usually the next instruction is a jump to skip a code block).
-        '5' => (),
+        0x5 => (),
 
         // 6XNN Sets VX to NN.
-        '6' => (),
+        0x6 => (),
 
         // 7XNN Adds NN to VX (carry flag is not changed).
-        '7' => (),
+        0x7 => (),
 
-        '8' => (
+        0x8 => (
             // 8XY0 Sets VX to the value of VY.
             // 8XY1 Sets VX to VX or VY. (bitwise OR operation)
             // 8XY2 Sets VX to VX and VY. (bitwise AND operation)
@@ -77,26 +89,26 @@ pub fn execute(instruction: String, stack: &Stack, registers: &Registers) -> boo
         ),
 
         // 9XY0 Skips the next instruction if VX does not equal VY. (Usually the next instruction is a jump to skip a code block);
-        '9' => (),
+        0x9 => (),
 
         // ANNN Sets I to the address NNN.
-        'A' => (),
+        0xA => (),
 
         // BNNN Jumps to the address NNN plus V0.
-        'B' => (),
+        0xB => (),
 
         // CXNN Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
-        'C' => (),
+        0xC => (),
 
         // DXYN Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels. Each row of 8 pixels is read as bit-coded starting from memory location I; I value does not change after the execution of this instruction. As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen.
-        'D' => (),
+        0xD => (),
 
-        'E' => (
+        0xE => (
             // EX9E Skips the next instruction if the key stored in VX is pressed (usually the next instruction is a jump to skip a code block).
             // EXA1 Skips the next instruction if the key stored in VX is not pressed (usually the next instruction is a jump to skip a code block).
         ),
 
-        'F' => (
+        0xF => (
             // FX07	Sets VX to the value of the delay timer.
             // FX0A	A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event).
             // FX15	Sets the delay timer to VX.
@@ -140,11 +152,13 @@ pub fn fetch_instruction(
     rom: &Vec<u8>,
     program_counter: &mut ProgramCounter,
     rom_length: usize,
-) -> String {
+) -> u16 {
     match fetch(&rom, program_counter, rom_length) {
         // :04X specifies a width of 4 with leading zeros
-        Some(integer) => format!("{:04X}", integer),
-        _ => String::from("0000"),
+        // Some(integer) => format!("{:04X}", integer),
+        Some(integer) => integer,
+        // _ => String::from("0000"),
+        _ => 0x0,
     }
 }
 

@@ -23,11 +23,11 @@ enum GeneralRegisters {
 }
 
 pub struct Registers {
-    registers: HashMap<GeneralRegisters, u16>,
+    registers: HashMap<GeneralRegisters, u8>,
 }
 impl Registers {
     pub fn new() -> Registers {
-        let mut registers: HashMap<GeneralRegisters, u16> = HashMap::new();
+        let mut registers: HashMap<GeneralRegisters, u8> = HashMap::new();
 
         registers.insert(GeneralRegisters::VZero, 0);
         registers.insert(GeneralRegisters::VOne, 0);
@@ -44,11 +44,12 @@ impl Registers {
         registers.insert(GeneralRegisters::VC, 0);
         registers.insert(GeneralRegisters::VD, 0);
         registers.insert(GeneralRegisters::VE, 0);
+        registers.insert(GeneralRegisters::VF, 0);
 
         Registers { registers }
     }
 
-    pub fn set_register(&mut self, register: GeneralRegisters, value: u16) {
+    pub fn set_register(&mut self, register: GeneralRegisters, value: u8) {
         if value <= 0xF {
             self.registers.insert(register, value);
         } else {
@@ -56,7 +57,26 @@ impl Registers {
         }
     }
 
-    pub fn get_register(&self, register: GeneralRegisters) -> Option<&u16> {
-        self.registers.get(&register)
+    pub fn get_register(&self, index: u8) -> Option<&u8> {
+        println!("get register: {}", index);
+        match index {
+            0x0 => self.registers.get(&GeneralRegisters::VZero),
+            0x1 => self.registers.get(&GeneralRegisters::VOne),
+            0x2 => self.registers.get(&GeneralRegisters::VTwo),
+            0x3 => self.registers.get(&GeneralRegisters::VThree),
+            0x4 => self.registers.get(&GeneralRegisters::VFour),
+            0x5 => self.registers.get(&GeneralRegisters::VFive),
+            0x6 => self.registers.get(&GeneralRegisters::VSix),
+            0x7 => self.registers.get(&GeneralRegisters::VSeven),
+            0x8 => self.registers.get(&GeneralRegisters::VEight),
+            0x9 => self.registers.get(&GeneralRegisters::VNine),
+            0xA => self.registers.get(&GeneralRegisters::VA),
+            0xB => self.registers.get(&GeneralRegisters::VB),
+            0xC => self.registers.get(&GeneralRegisters::VC),
+            0xD => self.registers.get(&GeneralRegisters::VD),
+            0xE => self.registers.get(&GeneralRegisters::VE),
+            0xF => self.registers.get(&GeneralRegisters::VF),
+            _ => None,
+        }
     }
 }
