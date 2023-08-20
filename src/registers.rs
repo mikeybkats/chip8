@@ -3,7 +3,7 @@ use std::collections::HashMap;
 // // 16 8-bit (one byte) general-purpose variable registers numbered 0 through F hexadecimal, ie. 0 through 15 in decimal, called V0 through VF
 // // VF is also used as a flag register; many instructions will set it to either 1 or 0 based on some rule, for example using it as a carry flag
 #[derive(Debug, PartialEq, Eq, Hash)]
-enum GeneralRegisters {
+pub enum GeneralRegisters {
     VZero,
     VOne,
     VTwo,
@@ -49,7 +49,7 @@ impl Registers {
         Registers { registers }
     }
 
-    pub fn set_register(&mut self, register: GeneralRegisters, value: u8) {
+    pub fn _set_register(&mut self, register: GeneralRegisters, value: u8) {
         if value <= 0xF {
             self.registers.insert(register, value);
         } else {
@@ -58,7 +58,6 @@ impl Registers {
     }
 
     pub fn get_register(&self, index: u16) -> Option<&u8> {
-        println!("get register: {}", index);
         match index {
             0x0 => self.registers.get(&GeneralRegisters::VZero),
             0x1 => self.registers.get(&GeneralRegisters::VOne),

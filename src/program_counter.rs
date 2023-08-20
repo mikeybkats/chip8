@@ -16,6 +16,10 @@ impl ProgramCounter {
         self.pc
     }
 
+    pub fn jump(&mut self, location: usize) {
+        self.pc = location;
+    }
+
     // gets the location of the program counter
     pub fn get_pc(&self) -> usize {
         self.pc as usize

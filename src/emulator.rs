@@ -1,3 +1,5 @@
+use pixels::Pixels;
+
 use crate::{
     draw::{Draw, Point},
     font::Font,
@@ -9,9 +11,12 @@ use crate::{
 // TODO: how does execute get access to all the methods it needs?
 pub fn execute(
     instruction: u16,
-    stack: &mut Stack,
+    _stack: &mut Stack,
     registers: &Registers,
     program_counter: &mut ProgramCounter,
+    pixels: &mut Pixels,
+    width: u32,
+    height: u32,
 ) -> bool {
     // println!("Decoding");
     /*
@@ -33,24 +38,38 @@ pub fn execute(
 
     let first_nibble = (instruction >> 12) & 0xF;
 
+    let screen = pixels.frame_mut();
+    let mut draw = Draw::new(width, height, screen);
+
     match first_nibble {
         // 0 Calls machine code routine at address NNN - not be needed for emulator
-        0x0 => (),
+        0x0 => {
+            // 00E0 - clears screen
+            if instruction == 0x00E0 {
+                // TODO: clear screen
+                draw.draw_pixel(&Point { x: 20, y: 20 });
+            }
+        }
 
         // 1NNN Jumps to address at NNN
+        // The interpreter sets the program counter to nnn.
         0x1 => {
             // 178D
-            let address = instruction & 0xFFF;
-            stack.jump_to_address(address as usize);
+            let location = instruction & 0xFFF;
+            program_counter.jump(location as usize);
         }
 
         // 2NNN Calls subroutine at NNN
-        0x2 => {}
+        0x2 => {
+            let _address = instruction & 0xFFF;
+        }
 
         // 3xkk - SE Vx, byte
         // Skip next instruction if Vx = kk.
         // The interpreter compares register Vx to kk, and if they are equal, increments the program counter by 2
         0x3 => {
+            println!("drawing pixel");
+            draw.draw_pixel(&Point { x: 20, y: 20 });
             let register = instruction >> 8 & 0xF;
             let vx = *registers.get_register(register).unwrap();
             let kk = (instruction & 0xFF) as u8;

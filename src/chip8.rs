@@ -7,6 +7,7 @@ use winit::{
 
 use crate::{
     display::{build_pixels, build_window},
+    draw::{Draw, Point},
     emulator::{execute, fetch_instruction, test_print},
     program_counter::ProgramCounter,
     registers::Registers,
@@ -22,19 +23,20 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     let scale = 20;
     let window = build_window(width * scale, height * scale, &event_loop);
     let mut pixels = build_pixels(&window, width, height).unwrap();
-    let screen = pixels.frame_mut();
 
     const INSTRUCTIONS_PER_SECOND: u32 = 700;
     let time_per_instruction = Duration::from_secs(1) / INSTRUCTIONS_PER_SECOND;
 
     let mut stack = Stack::new();
     let mut program_counter = ProgramCounter::new();
-
     let registers = Registers::new();
+    // let screen = pixels.frame_mut();
 
-    ///////
-    test_print(width, height, screen);
-    ///////
+    // ///////
+    // test_print(width, height, screen);
+    // ///////
+
+    let mut redraw_needed = true; // Indicator for redraw
 
     // main event loop
     event_loop.run(move |event, _, control_flow| {
@@ -48,10 +50,19 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                 // fetch
                 let rom_length = rom.len();
                 let instruction = fetch_instruction(&rom, &mut program_counter, rom_length);
-                // decode
-                // let command = decode(instruction);
-                // execute
-                execute(instruction, &mut stack, &registers, &mut program_counter);
+                execute(
+                    instruction,
+                    &mut stack,
+                    &registers,
+                    &mut program_counter,
+                    &mut pixels,
+                    width,
+                    height,
+                );
+
+                // let screen = pixels.frame_mut();
+                // let mut draw = Draw::new(width, height, screen);
+                // draw.draw_pixel(&Point { x: 20, y: 20 });
             }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,

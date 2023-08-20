@@ -56,6 +56,13 @@ impl Draw<'_> {
             draw_point += self.width * 4;
         }
     }
+
+    /* clears the screen */
+    pub fn _clear(&mut self) {
+        for element in self.screen.iter_mut() {
+            *element = 0;
+        }
+    }
 }
 
 /*  Drawables can be blitted to the pixel buffer and animated. */
