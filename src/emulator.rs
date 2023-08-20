@@ -2,12 +2,17 @@ use crate::{
     draw::{Draw, Point},
     font::Font,
     program_counter::ProgramCounter,
-    registers::{self, Registers},
+    registers::Registers,
     stack::Stack,
 };
 
 // TODO: how does execute get access to all the methods it needs?
-pub fn execute(instruction: u16, _stack: &Stack, registers: &Registers) -> bool {
+pub fn execute(
+    instruction: u16,
+    stack: &mut Stack,
+    registers: &Registers,
+    program_counter: &mut ProgramCounter,
+) -> bool {
     // println!("Decoding");
     /*
      * NNN: address
@@ -35,6 +40,8 @@ pub fn execute(instruction: u16, _stack: &Stack, registers: &Registers) -> bool 
         // 1NNN Jumps to address at NNN
         0x1 => {
             // 178D
+            let address = instruction & 0xFFF;
+            stack.jump_to_address(address as usize);
         }
 
         // 2NNN Calls subroutine at NNN
@@ -44,18 +51,13 @@ pub fn execute(instruction: u16, _stack: &Stack, registers: &Registers) -> bool 
         // Skip next instruction if Vx = kk.
         // The interpreter compares register Vx to kk, and if they are equal, increments the program counter by 2
         0x3 => {
-            // 3C42
-            println!("instruction chars: {:?}", instruction.chars());
-            let register = instruction.chars().nth(1).unwrap();
-            println!("register: {}", register);
-
-            let vx = registers.get_register(register).unwrap();
-            println!("vx: {}", vx);
-
-            // let kk = &instruction[2..4];
-            println!("kk: {}", kk);
-
-            if kk == vx {}
+            let register = instruction >> 8 & 0xF;
+            let vx = *registers.get_register(register).unwrap();
+            let kk = (instruction & 0xFF) as u8;
+            if kk == vx {
+                program_counter.increment();
+                program_counter.increment();
+            }
         }
 
         // 4XNN Skips the next instruction if VX does not equal NN (usually the next instruction is a jump to skip a code block).

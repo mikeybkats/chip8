@@ -57,7 +57,7 @@ impl Registers {
         }
     }
 
-    pub fn get_register(&self, index: u8) -> Option<&u8> {
+    pub fn get_register(&self, index: u16) -> Option<&u8> {
         println!("get register: {}", index);
         match index {
             0x0 => self.registers.get(&GeneralRegisters::VZero),

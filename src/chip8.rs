@@ -27,7 +27,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     const INSTRUCTIONS_PER_SECOND: u32 = 700;
     let time_per_instruction = Duration::from_secs(1) / INSTRUCTIONS_PER_SECOND;
 
-    let stack = Stack::new();
+    let mut stack = Stack::new();
     let mut program_counter = ProgramCounter::new();
 
     let registers = Registers::new();
@@ -51,7 +51,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                 // decode
                 // let command = decode(instruction);
                 // execute
-                execute(instruction, &stack, &registers);
+                execute(instruction, &mut stack, &registers, &mut program_counter);
             }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,

@@ -35,6 +35,10 @@ impl Stack {
         self.sp as u8
     }
 
+    pub fn jump_to_address(&mut self, value: usize) {
+        self.sp = value;
+    }
+
     pub fn get_sp(&self) -> u8 {
         self.sp as u8
     }
