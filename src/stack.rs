@@ -10,16 +10,16 @@ impl Stack {
         }
     }
 
-    pub fn current(&self) -> u8 {
-        self.stack[self.sp as usize]
+    pub fn current(&self) -> usize {
+        self.stack[self.sp as usize] as usize
     }
 
-    pub fn push(mut self, value: u8) {
-        self.stack[self.sp] = value;
+    pub fn push(&mut self, value: usize) {
+        self.stack[self.sp] = value as u8;
         self.increment();
     }
 
-    pub fn pop(mut self) -> u8 {
+    pub fn pop(&mut self) -> u8 {
         let return_value = self.stack[self.sp];
         self.decrement();
         return_value

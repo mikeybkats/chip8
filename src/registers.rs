@@ -49,33 +49,35 @@ impl Registers {
         Registers { registers }
     }
 
-    pub fn _set_register(&mut self, register: GeneralRegisters, value: u8) {
-        if value <= 0xF {
-            self.registers.insert(register, value);
-        } else {
-            panic!("Invalid value for register");
+    fn match_register(&self, index: u16) -> Option<GeneralRegisters> {
+        match index {
+            0x0 => Some(GeneralRegisters::VZero),
+            0x1 => Some(GeneralRegisters::VOne),
+            0x2 => Some(GeneralRegisters::VTwo),
+            0x3 => Some(GeneralRegisters::VThree),
+            0x4 => Some(GeneralRegisters::VFour),
+            0x5 => Some(GeneralRegisters::VFive),
+            0x6 => Some(GeneralRegisters::VSix),
+            0x7 => Some(GeneralRegisters::VSeven),
+            0x8 => Some(GeneralRegisters::VEight),
+            0x9 => Some(GeneralRegisters::VNine),
+            0xA => Some(GeneralRegisters::VA),
+            0xB => Some(GeneralRegisters::VB),
+            0xC => Some(GeneralRegisters::VC),
+            0xD => Some(GeneralRegisters::VD),
+            0xE => Some(GeneralRegisters::VE),
+            0xF => Some(GeneralRegisters::VF),
+            _ => None,
         }
     }
 
+    pub fn set_register(&mut self, index: u16, value: u8) -> Option<u8> {
+        let register = self.match_register(index).unwrap();
+        self.registers.insert(register, value)
+    }
+
     pub fn get_register(&self, index: u16) -> Option<&u8> {
-        match index {
-            0x0 => self.registers.get(&GeneralRegisters::VZero),
-            0x1 => self.registers.get(&GeneralRegisters::VOne),
-            0x2 => self.registers.get(&GeneralRegisters::VTwo),
-            0x3 => self.registers.get(&GeneralRegisters::VThree),
-            0x4 => self.registers.get(&GeneralRegisters::VFour),
-            0x5 => self.registers.get(&GeneralRegisters::VFive),
-            0x6 => self.registers.get(&GeneralRegisters::VSix),
-            0x7 => self.registers.get(&GeneralRegisters::VSeven),
-            0x8 => self.registers.get(&GeneralRegisters::VEight),
-            0x9 => self.registers.get(&GeneralRegisters::VNine),
-            0xA => self.registers.get(&GeneralRegisters::VA),
-            0xB => self.registers.get(&GeneralRegisters::VB),
-            0xC => self.registers.get(&GeneralRegisters::VC),
-            0xD => self.registers.get(&GeneralRegisters::VD),
-            0xE => self.registers.get(&GeneralRegisters::VE),
-            0xF => self.registers.get(&GeneralRegisters::VF),
-            _ => None,
-        }
+        let register = self.match_register(index).unwrap();
+        self.registers.get(&register)
     }
 }

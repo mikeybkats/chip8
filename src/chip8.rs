@@ -29,7 +29,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
 
     let mut stack = Stack::new();
     let mut program_counter = ProgramCounter::new();
-    let registers = Registers::new();
+    let mut registers = Registers::new();
     let screen = pixels.frame_mut();
 
     // ///////
@@ -51,7 +51,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                 execute(
                     instruction,
                     &mut stack,
-                    &registers,
+                    &mut registers,
                     &mut program_counter,
                     &mut pixels,
                     width,

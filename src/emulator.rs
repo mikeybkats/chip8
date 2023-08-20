@@ -11,14 +11,13 @@ use crate::{
 // TODO: how does execute get access to all the methods it needs?
 pub fn execute(
     instruction: u16,
-    _stack: &mut Stack,
-    registers: &Registers,
+    stack: &mut Stack,
+    registers: &mut Registers,
     program_counter: &mut ProgramCounter,
     pixels: &mut Pixels,
     width: u32,
     height: u32,
 ) {
-    // println!("Decoding");
     /*
      * NNN: address
      * NN: 8-bit constant
@@ -27,31 +26,26 @@ pub fn execute(
      * PC : Program Counter
      * I : 16bit register (For memory address) (Similar to void pointer);
      * VN: One of the 16 available variables. N may be 0 to F (hexadecimal);
-     *
-     * X: The second nibble. Used to look up one of the 16 registers (VX) from V0 through VF.
-     * Y: The third nibble. Also used to look up one of the 16 registers (VY) from V0 through VF.
-     * N: The fourth nibble. A 4-bit number.
-     * NN: The second byte (third and fourth nibbles). An 8-bit immediate number.
-     * NNN: The second, third and fourth nibbles. A 12-bit immediate memory address.
      */
-    // let case = instruction.chars().nth(0).unwrap();
-
     let first_nibble = (instruction >> 12) & 0xF;
 
     let screen = pixels.frame_mut();
 
     let mut draw = Draw::new(width, height, screen);
 
-    // draw.draw_pixel works here
-    // draw.draw_pixel(&Point { x: 20, y: 20 });
-
     match first_nibble {
         // 0 Calls machine code routine at address NNN - not be needed for emulator
         0x0 => {
             // 00E0 - clears screen
-            if instruction == 0x00E0 {
-                // TODO: clear screen
-                draw.clear()
+            match instruction {
+                0x00E0 => draw.clear(),
+                0x00EE => {
+                    // Return from a subroutine.
+                    // The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
+                    let current_address = stack.current();
+                    program_counter.jump(current_address);
+                }
+                _ => (),
             }
         }
 
@@ -64,35 +58,71 @@ pub fn execute(
         }
 
         // 2NNN Calls subroutine at NNN
+        // The interpreter increments the stack pointer, then puts the current PC on the top of the stack. The PC is then set to nnn.
         0x2 => {
-            let _address = instruction & 0xFFF;
+            // increment stack pointer
+            let new_current = program_counter.increment();
+            // push current PC to top of stack
+            stack.push(new_current);
+            // set PC to NNN
+            let nnn = instruction & 0xFFF;
+            program_counter.jump(nnn as usize)
         }
 
         // 3xkk - SE Vx, byte
         // Skip next instruction if Vx = kk.
         // The interpreter compares register Vx to kk, and if they are equal, increments the program counter by 2
         0x3 => {
-            println!("drawing pixel");
-            // draw.draw_pixel does not render here. is the screen being erased?
-            draw.draw_pixel(&Point { x: 20, y: 20 });
-
+            // use bit shift and mask to get the desired 4 bits
             let register = instruction >> 8 & 0xF;
+            // get vx
             let vx = *registers.get_register(register).unwrap();
+            // get kk
             let kk = (instruction & 0xFF) as u8;
+            // compares
             if kk == vx {
+                // skip next instruction by incrementing PC by two
                 program_counter.increment();
                 program_counter.increment();
             }
         }
 
         // 4XNN Skips the next instruction if VX does not equal NN (usually the next instruction is a jump to skip a code block).
-        0x4 => (),
+        0x4 => {
+            // use bit shift and mask to get the desired 4 bits
+            let register = instruction >> 8 & 0xF;
+            // get vx
+            let vx = *registers.get_register(register).unwrap();
+            // get kk
+            let kk = (instruction & 0xFF) as u8;
+            // compares
+            if kk != vx {
+                // skip next instruction by incrementing PC by two
+                program_counter.increment();
+                program_counter.increment();
+            }
+        }
 
         // 5XY0 Skips the next instruction if VX equals VY (usually the next instruction is a jump to skip a code block).
-        0x5 => (),
+        // The interpreter compares register Vx to register Vy, and if they are equal, increments the program counter by 2.
+        0x5 => {
+            let register_x = instruction >> 8 & 0xF;
+            let vx = *registers.get_register(register_x).unwrap();
+            let register_y = instruction >> 4 & 0xF;
+            let vy = *registers.get_register(register_y).unwrap();
+
+            if vx == vy {
+                program_counter.increment();
+                program_counter.increment();
+            }
+        }
 
         // 6XNN Sets VX to NN.
-        0x6 => (),
+        0x6 => {
+            let nn = ((instruction as usize) & 0xFF) as u8;
+            let vx = instruction >> 8 & 0xF;
+            registers.set_register(vx, nn);
+        }
 
         // 7XNN Adds NN to VX (carry flag is not changed).
         0x7 => (),
@@ -143,6 +173,7 @@ pub fn execute(
         _ => (),
     }
 
+    // TODO: shouldn't have to call this here. Why do i have to?
     // calling pixels.render() forces the render
     pixels.render().unwrap();
 }
