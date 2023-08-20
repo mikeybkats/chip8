@@ -17,7 +17,7 @@ pub fn execute(
     pixels: &mut Pixels,
     width: u32,
     height: u32,
-) -> bool {
+) {
     // println!("Decoding");
     /*
      * NNN: address
@@ -39,7 +39,11 @@ pub fn execute(
     let first_nibble = (instruction >> 12) & 0xF;
 
     let screen = pixels.frame_mut();
+
     let mut draw = Draw::new(width, height, screen);
+
+    // draw.draw_pixel works here
+    // draw.draw_pixel(&Point { x: 20, y: 20 });
 
     match first_nibble {
         // 0 Calls machine code routine at address NNN - not be needed for emulator
@@ -47,7 +51,7 @@ pub fn execute(
             // 00E0 - clears screen
             if instruction == 0x00E0 {
                 // TODO: clear screen
-                draw.draw_pixel(&Point { x: 20, y: 20 });
+                draw.clear()
             }
         }
 
@@ -69,7 +73,9 @@ pub fn execute(
         // The interpreter compares register Vx to kk, and if they are equal, increments the program counter by 2
         0x3 => {
             println!("drawing pixel");
+            // draw.draw_pixel does not render here. is the screen being erased?
             draw.draw_pixel(&Point { x: 20, y: 20 });
+
             let register = instruction >> 8 & 0xF;
             let vx = *registers.get_register(register).unwrap();
             let kk = (instruction & 0xFF) as u8;
@@ -136,7 +142,9 @@ pub fn execute(
         ),
         _ => (),
     }
-    false
+
+    // calling pixels.render() forces the render
+    pixels.render().unwrap();
 }
 
 pub fn _decode(_command: bool) -> bool {

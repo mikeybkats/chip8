@@ -38,6 +38,11 @@ fn check_args(args: &[String]) -> Result<String, &'static str> {
 }
 
 fn main() {
+    // Initialize the logger
+    env_logger::builder()
+        .filter_level(log::LevelFilter::Info) // Set the log level
+        .init();
+
     let args: Vec<String> = env::args().collect();
 
     let rom_file_path = check_args(&args).unwrap_or_else(|err| {

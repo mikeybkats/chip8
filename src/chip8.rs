@@ -1,7 +1,7 @@
 use std::time::{Duration, Instant};
 
 use winit::{
-    event::{ElementState, Event, KeyboardInput, WindowEvent},
+    event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
 };
 
@@ -30,13 +30,11 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     let mut stack = Stack::new();
     let mut program_counter = ProgramCounter::new();
     let registers = Registers::new();
-    // let screen = pixels.frame_mut();
+    let screen = pixels.frame_mut();
 
     // ///////
-    // test_print(width, height, screen);
+    test_print(width, height, screen);
     // ///////
-
-    let mut redraw_needed = true; // Indicator for redraw
 
     // main event loop
     event_loop.run(move |event, _, control_flow| {
@@ -59,10 +57,6 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                     width,
                     height,
                 );
-
-                // let screen = pixels.frame_mut();
-                // let mut draw = Draw::new(width, height, screen);
-                // draw.draw_pixel(&Point { x: 20, y: 20 });
             }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
@@ -72,6 +66,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                 control_flow.set_exit();
             }
             Event::RedrawRequested(_) => {
+                println!("redrawing");
                 pixels.render().unwrap();
             }
             Event::WindowEvent { event, window_id } if window_id == window.id() => match event {
@@ -85,6 +80,11 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                     ..
                 } => {
                     println!("Key pressed: {:?}", virtual_keycode);
+                    if virtual_keycode == VirtualKeyCode::C {
+                        let screen = pixels.frame_mut();
+                        let mut draw = Draw::new(width, height, screen);
+                        draw.clear();
+                    }
                 }
                 _ => {}
             },

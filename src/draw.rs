@@ -58,7 +58,7 @@ impl Draw<'_> {
     }
 
     /* clears the screen */
-    pub fn _clear(&mut self) {
+    pub fn clear(&mut self) {
         for element in self.screen.iter_mut() {
             *element = 0;
         }
