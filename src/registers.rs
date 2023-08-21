@@ -23,7 +23,8 @@ pub enum GeneralRegisters {
 }
 
 pub struct Registers {
-    registers: HashMap<GeneralRegisters, u8>,
+    general_registers: HashMap<GeneralRegisters, u8>,
+    i_register: u16,
 }
 impl Registers {
     pub fn new() -> Registers {
@@ -46,7 +47,10 @@ impl Registers {
         registers.insert(GeneralRegisters::VE, 0);
         registers.insert(GeneralRegisters::VF, 0);
 
-        Registers { registers }
+        Registers {
+            general_registers: registers,
+            i_register: 0,
+        }
     }
 
     fn match_register(&self, index: u16) -> Option<GeneralRegisters> {
@@ -73,11 +77,19 @@ impl Registers {
 
     pub fn set_register(&mut self, index: u16, value: u8) -> Option<u8> {
         let register = self.match_register(index).unwrap();
-        self.registers.insert(register, value)
+        self.general_registers.insert(register, value)
     }
 
     pub fn get_register(&self, index: u16) -> Option<&u8> {
         let register = self.match_register(index).unwrap();
-        self.registers.get(&register)
+        self.general_registers.get(&register)
+    }
+
+    pub fn set_i_register(&mut self, value: u16) {
+        self.i_register = value
+    }
+
+    pub fn get_i_register(&self) -> &u16 {
+        &self.i_register
     }
 }

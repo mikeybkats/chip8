@@ -33,6 +33,11 @@ pub fn execute(
 
     let mut draw = Draw::new(width, height, screen);
 
+    let vy_index = instruction >> 4 & 0xF;
+    let vy_value = *registers.get_register(vy_index).unwrap();
+    let vx_index = instruction >> 8 & 0xF;
+    let vx_value = *registers.get_register(vx_index).unwrap();
+
     match first_nibble {
         // 0 Calls machine code routine at address NNN - not be needed for emulator
         0x0 => {
@@ -73,14 +78,9 @@ pub fn execute(
         // Skip next instruction if Vx = kk.
         // The interpreter compares register Vx to kk, and if they are equal, increments the program counter by 2
         0x3 => {
-            // use bit shift and mask to get the desired 4 bits
-            let vx_register = instruction >> 8 & 0xF;
-            // get vx
-            let vx = *registers.get_register(vx_register).unwrap();
-            // get kk
             let kk = (instruction & 0xFF) as u8;
             // compares
-            if kk == vx {
+            if kk == vx_value {
                 // skip next instruction by incrementing PC by two
                 program_counter.increment();
                 program_counter.increment();
@@ -89,14 +89,10 @@ pub fn execute(
 
         // 4XNN Skips the next instruction if VX does not equal NN (usually the next instruction is a jump to skip a code block).
         0x4 => {
-            // use bit shift and mask to get the desired 4 bits
-            let vx_register = instruction >> 8 & 0xF;
-            // get vx
-            let vx = *registers.get_register(vx_register).unwrap();
             // get kk
             let kk = (instruction & 0xFF) as u8;
             // compares
-            if kk != vx {
+            if kk != vx_value {
                 // skip next instruction by incrementing PC by two
                 program_counter.increment();
                 program_counter.increment();
@@ -106,12 +102,7 @@ pub fn execute(
         // 5XY0 Skips the next instruction if VX equals VY (usually the next instruction is a jump to skip a code block).
         // The interpreter compares register Vx to register Vy, and if they are equal, increments the program counter by 2.
         0x5 => {
-            let x_register = instruction >> 8 & 0xF;
-            let vx = *registers.get_register(x_register).unwrap();
-            let vy_register = instruction >> 4 & 0xF;
-            let vy = *registers.get_register(vy_register).unwrap();
-
-            if vx == vy {
+            if vx_value == vy_value {
                 program_counter.increment();
                 program_counter.increment();
             }
@@ -120,24 +111,17 @@ pub fn execute(
         // 6XNN Sets VX to NN.
         0x6 => {
             let nn = ((instruction as usize) & 0xFF) as u8;
-            let vx_register = instruction >> 8 & 0xF;
-            registers.set_register(vx_register, nn);
+            registers.set_register(vx_index, nn);
         }
 
         // 7XNN Adds NN to VX (carry flag is not changed).
         0x7 => {
             let nn = ((instruction as usize) & 0xFF) as u8;
-            let vx_register = instruction >> 8 & 0xF;
-            let vx_value = registers.get_register(vx_register).unwrap();
-            registers.set_register(vx_register, nn + vx_value);
+            registers.set_register(vx_index, nn + vx_value);
         }
 
         0x8 => {
             let instruction_0 = instruction & 0xF;
-            let vy_index = instruction >> 4 & 0xF;
-            let vy_value = *registers.get_register(vy_index).unwrap();
-            let vx_index = instruction >> 8 & 0xF;
-            let vx_value = *registers.get_register(vx_index).unwrap();
             match instruction_0 {
                 0 => {
                     // 8XY0 Sets VX to the value of VY.
@@ -175,6 +159,8 @@ pub fn execute(
 
                     if borrow {
                         registers.set_register(0xF, 0);
+                    } else {
+                        registers.set_register(0xF, 1);
                     }
                 }
 
@@ -187,20 +173,36 @@ pub fn execute(
 
                 7 => {
                     // 8XY7 Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there is not
+                    let (diff, borrow) = vy_value.overflowing_sub(vx_value);
+                    registers.set_register(vx_index, diff);
+
+                    if borrow {
+                        registers.set_register(0xF, 0);
+                    } else {
+                        registers.set_register(0xF, 1);
+                    }
                 }
 
                 8 => {
                     // 8XYE	Stores the most significant bit of VX in VF and then shifts VX to the left by 1
+                    let vx_msb = (vx_value >> 7) & 1;
+                    registers.set_register(0xF, vx_msb);
+                    registers.set_register(vx_index, vx_value << 1);
                 }
                 _ => (),
             }
         }
 
         // 9XY0 Skips the next instruction if VX does not equal VY. (Usually the next instruction is a jump to skip a code block);
-        0x9 => (),
+        0x9 => {
+            if vx_value != vy_value {
+                program_counter.increment();
+                program_counter.increment();
+            }
+        }
 
         // ANNN Sets I to the address NNN.
-        0xA => (),
+        0xA => {}
 
         // BNNN Jumps to the address NNN plus V0.
         0xB => (),
