@@ -1,6 +1,6 @@
 // A program counter, often called just “PC”, which points at the current instruction in memory
 pub struct ProgramCounter {
-    pc: usize,
+    pc: u16,
     // rom: [u8; 3584],
 }
 impl ProgramCounter {
@@ -11,12 +11,12 @@ impl ProgramCounter {
         }
     }
 
-    pub fn increment(&mut self) -> usize {
+    pub fn increment(&mut self) -> u16 {
         self.pc += 1;
         self.pc
     }
 
-    pub fn jump(&mut self, location: usize) {
+    pub fn jump(&mut self, location: u16) {
         self.pc = location;
     }
 

@@ -59,7 +59,7 @@ pub fn execute(
         0x1 => {
             // 178D
             let location = instruction & 0xFFF;
-            program_counter.jump(location as usize);
+            program_counter.jump(location);
         }
 
         // 2NNN Calls subroutine at NNN
@@ -71,7 +71,7 @@ pub fn execute(
             stack.push(new_current);
             // set PC to NNN
             let nnn = instruction & 0xFFF;
-            program_counter.jump(nnn as usize)
+            program_counter.jump(nnn)
         }
 
         // 3xkk - SE Vx, byte
@@ -202,16 +202,33 @@ pub fn execute(
         }
 
         // ANNN Sets I to the address NNN.
-        0xA => {}
+        0xA => {
+            let nnn = instruction & 0xFFF;
+            registers.set_i_register(nnn);
+        }
 
         // BNNN Jumps to the address NNN plus V0.
-        0xB => (),
+        0xB => {
+            let nnn = instruction & 0xFFF;
+            stack.jump_to_address(nnn as usize);
+        }
 
         // CXNN Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
-        0xC => (),
+        0xC => {
+            let nn = instruction & 0xFF;
+            let random_number = rand::random::<u16>();
+            let x = (random_number & nn) as u8;
+            registers.set_register(vx_index, x);
+        }
 
         // DXYN Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels. Each row of 8 pixels is read as bit-coded starting from memory location I; I value does not change after the execution of this instruction. As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen.
-        0xD => (),
+        0xD => {
+            // let dest = &Point {
+            //     x: vx_value as usize,
+            //     y: vy_value as usize,
+            // };
+            // draw.blit_drawable(dest, sprite)
+        }
 
         0xE => (
             // EX9E Skips the next instruction if the key stored in VX is pressed (usually the next instruction is a jump to skip a code block).

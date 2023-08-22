@@ -1,6 +1,6 @@
 pub struct Stack {
     sp: usize,
-    stack: [u8; 512],
+    stack: [u16; 512],
 }
 impl Stack {
     pub fn new() -> Stack {
@@ -10,36 +10,36 @@ impl Stack {
         }
     }
 
-    pub fn current(&self) -> usize {
-        self.stack[self.sp as usize] as usize
+    pub fn current(&self) -> u16 {
+        self.stack[self.sp as usize]
     }
 
-    pub fn push(&mut self, value: usize) {
-        self.stack[self.sp] = value as u8;
+    pub fn push(&mut self, value: u16) {
+        self.stack[self.sp] = value;
         self.increment();
     }
 
-    pub fn pop(&mut self) -> u8 {
+    pub fn pop(&mut self) -> u16 {
         let return_value = self.stack[self.sp];
         self.decrement();
         return_value
     }
 
-    pub fn increment(&mut self) -> u8 {
+    pub fn increment(&mut self) -> usize {
         self.sp += 1;
-        self.sp as u8
+        self.sp
     }
 
-    pub fn decrement(&mut self) -> u8 {
+    pub fn decrement(&mut self) -> usize {
         self.sp -= 1;
-        self.sp as u8
+        self.sp
     }
 
     pub fn jump_to_address(&mut self, value: usize) {
         self.sp = value;
     }
 
-    pub fn get_sp(&self) -> u8 {
-        self.sp as u8
+    pub fn get_sp(&self) -> usize {
+        self.sp
     }
 }
