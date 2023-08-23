@@ -1,7 +1,7 @@
 use pixels::Pixels;
 
 use crate::{
-    draw::{Draw, Point},
+    draw::{Draw, Drawable, Point, Sprite},
     font::Font,
     program_counter::ProgramCounter,
     registers::Registers,
@@ -17,6 +17,7 @@ pub fn execute(
     pixels: &mut Pixels,
     width: u32,
     height: u32,
+    rom: &Vec<u8>,
 ) {
     /*
      * NNN: address
@@ -42,6 +43,7 @@ pub fn execute(
         // 0 Calls machine code routine at address NNN - not be needed for emulator
         0x0 => {
             // 00E0 - clears screen
+            // println!("instruction 1: {}", instruction);
             match instruction {
                 0x00E0 => draw.clear(),
                 0x00EE => {
@@ -223,17 +225,39 @@ pub fn execute(
 
         // DXYN Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels. Each row of 8 pixels is read as bit-coded starting from memory location I; I value does not change after the execution of this instruction. As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen.
         0xD => {
-            // let dest = &Point {
-            //     x: vx_value as usize,
-            //     y: vy_value as usize,
-            // };
-            // draw.blit_drawable(dest, sprite)
+            let height = (instruction & 0xF) as u8;
+
+            let length = 8 * height as usize;
+            let location = *registers.get_i_register() as usize;
+
+            let dest = &Point {
+                x: vx_value as usize,
+                y: vy_value as usize,
+            };
+            let sprite = Sprite::new(8, height, &rom[location..length]);
+
+            draw.blit_drawable(dest, &sprite);
+
+            println!("instruction: {:X}", instruction & 0xFF);
+            // println!("instruction: {:X}, height: {}", instruction, height);
+            // println!("location: {}, length: {}", location, length);
+            // println!("vx: {}, vy: {}", vx_value, vy_value);
+            // println!("pixels {:?}", &rom[location..length]);
         }
 
-        0xE => (
-            // EX9E Skips the next instruction if the key stored in VX is pressed (usually the next instruction is a jump to skip a code block).
-            // EXA1 Skips the next instruction if the key stored in VX is not pressed (usually the next instruction is a jump to skip a code block).
-        ),
+        0xE => {
+            match instruction & 0xFF {
+                // EX9E Skips the next instruction if the key stored in VX is pressed (usually the next instruction is a jump to skip a code block).
+                0x9E => {
+                    // TODO: how do i check for key press in here?
+                    registers.get_register(vx_index);
+                    program_counter.increment();
+                }
+                // EXA1 Skips the next instruction if the key stored in VX is not pressed (usually the next instruction is a jump to skip a code block).
+                0xA1 => {}
+                _ => {}
+            }
+        }
 
         0xF => (
             // FX07	Sets VX to the value of the delay timer.

@@ -49,7 +49,20 @@ impl Draw<'_> {
                     self.screen[loc] = 0xE2;
                     self.screen[loc + 1] = 0x1B;
                     self.screen[loc + 2] = 0x88;
-                    self.screen[loc + 3] = 0xff;
+                    self.screen[loc + 3] = 0xFF;
+                } else {
+                    // TODO: enable this block of code when ready
+                    // if the pixel location contains data already then set it to black
+                    // if self.screen[loc] > 0
+                    //     || self.screen[loc + 1] > 0
+                    //     || self.screen[loc + 2] > 0
+                    //     || self.screen[loc + 3] > 0
+                    // {
+                    //     self.screen[loc] = 0x0;
+                    //     self.screen[loc + 1] = 0x0;
+                    //     self.screen[loc + 2] = 0x0;
+                    //     self.screen[loc + 3] = 0x0;
+                    // }
                 }
                 count += 1;
             }
@@ -65,6 +78,12 @@ impl Draw<'_> {
     }
 }
 
+/* A position vector */
+pub struct Point {
+    pub x: usize,
+    pub y: usize,
+}
+
 /*  Drawables can be blitted to the pixel buffer and animated. */
 pub trait Drawable {
     fn width(&self) -> usize;
@@ -72,8 +91,31 @@ pub trait Drawable {
     fn pixels(&self) -> &[u8];
 }
 
-/* A position vector */
-pub struct Point {
-    pub x: usize,
-    pub y: usize,
+pub struct Sprite<'a> {
+    width: u8,
+    height: u8,
+    pixels: &'a [u8],
+}
+impl<'a> Sprite<'a> {
+    pub fn new(width: u8, height: u8, pixels: &'a [u8]) -> Sprite<'a> {
+        Sprite {
+            width,
+            height,
+            pixels,
+        }
+    }
+}
+
+impl<'a> Drawable for Sprite<'a> {
+    fn width(&self) -> usize {
+        self.width as usize
+    }
+
+    fn height(&self) -> usize {
+        self.height as usize
+    }
+
+    fn pixels(&self) -> &[u8] {
+        self.pixels
+    }
 }

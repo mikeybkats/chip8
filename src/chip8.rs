@@ -56,6 +56,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                     &mut pixels,
                     width,
                     height,
+                    &rom,
                 );
             }
             Event::WindowEvent {

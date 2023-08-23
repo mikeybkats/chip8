@@ -39,9 +39,9 @@ fn check_args(args: &[String]) -> Result<String, &'static str> {
 
 fn main() {
     // Initialize the logger
-    env_logger::builder()
-        .filter_level(log::LevelFilter::Info) // Set the log level
-        .init();
+    // env_logger::builder()
+    //     .filter_level(log::LevelFilter::Info) // Set the log level
+    //     .init();
 
     let args: Vec<String> = env::args().collect();
 
