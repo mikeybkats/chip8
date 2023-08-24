@@ -1,7 +1,8 @@
 use pixels::Pixels;
 
 use crate::{
-    draw::{Draw, Drawable, Point, Sprite},
+    chip8::KeyPress,
+    draw::{Draw, Point, Sprite},
     font::Font,
     program_counter::ProgramCounter,
     registers::Registers,
@@ -18,6 +19,7 @@ pub fn execute(
     width: u32,
     height: u32,
     rom: &Vec<u8>,
+    key_state: KeyPress,
 ) {
     /*
      * NNN: address
@@ -259,19 +261,49 @@ pub fn execute(
             }
         }
 
-        0xF => (
-            // FX07	Sets VX to the value of the delay timer.
-            // FX0A	A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event).
-            // FX15	Sets the delay timer to VX.
-            // FX18	Sets the sound timer to VX.
-            // FX1E	Adds VX to I. VF is not affected.[c]
-            // FX29	Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.
-            // FX33	Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
-            // FX55	Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.[d]
-            // FX65	Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified.[d]
-        ),
+        0xF => {
+            match instruction & 0xFF {
+                // FX07	Sets VX to the value of the delay timer.
+                0x07 => {
+                    // TODO: implement delay timer
+                    registers.set_register(vx_index, 0);
+                }
+                // FX0A	A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event).
+                0x0A => {
+                    if *key_state.key_pressed {
+                        match key_state.current_key {
+                            Some(value) => {
+                                println!("key scancode: {}", value);
+                                registers.set_register(vx_index, value as u8);
+                                *key_state.key_pressed = false;
+                            }
+                            None => println!("Value is undefined"),
+                        }
+                    }
+                }
+                // FX15	Sets the delay timer to VX.
+                // FX18	Sets the sound timer to VX.
+                // FX1E	Adds VX to I. VF is not affected.[c]
+                // FX29	Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.
+                // FX33	Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
+                // FX55	Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.[d]
+                // FX65	Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified.[d]
+                _ => (),
+            }
+        }
         _ => (),
     }
+
+    // test key press scancode
+    // if *key_state.key_pressed {
+    //     match key_state.current_key {
+    //         Some(value) => {
+    //             println!("key scancode: {}", value);
+    //             *key_state.key_pressed = false;
+    //         }
+    //         None => println!("Value is undefined"),
+    //     }
+    // }
 
     // TODO: shouldn't have to call this here. Why do i have to?
     // calling pixels.render() forces the render

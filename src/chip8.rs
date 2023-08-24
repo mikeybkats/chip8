@@ -1,22 +1,24 @@
 use std::time::{Duration, Instant};
 
 use winit::{
-    event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
+    event::{ElementState, Event, KeyboardInput, ScanCode, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
 };
 
 use crate::{
     display::{build_pixels, build_window},
-    draw::{Draw, Point},
+    draw::Draw,
     emulator::{execute, fetch_instruction, test_print},
     program_counter::ProgramCounter,
     registers::Registers,
     stack::Stack,
 };
 
-// extern "C" {
-//     static mut MEMORY: Memory;
-// }
+#[derive(Debug)]
+pub struct KeyPress<'a> {
+    pub current_key: Option<ScanCode>,
+    pub key_pressed: &'a mut bool,
+}
 
 pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     let event_loop = EventLoop::new();
@@ -31,6 +33,8 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     let mut program_counter = ProgramCounter::new();
     let mut registers = Registers::new();
     let screen = pixels.frame_mut();
+    let mut current_key: Option<ScanCode> = None;
+    let mut key_pressed: bool = false;
 
     // ///////
     test_print(width, height, screen);
@@ -48,6 +52,12 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                 // fetch
                 let rom_length = rom.len();
                 let instruction = fetch_instruction(&rom, &mut program_counter, rom_length);
+
+                let key_state = KeyPress {
+                    current_key,
+                    key_pressed: &mut key_pressed,
+                };
+
                 execute(
                     instruction,
                     &mut stack,
@@ -57,6 +67,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                     width,
                     height,
                     &rom,
+                    key_state,
                 );
             }
             Event::WindowEvent {
@@ -76,11 +87,15 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                         KeyboardInput {
                             state: ElementState::Pressed,
                             virtual_keycode: Some(virtual_keycode),
+                            scancode: key_scancode,
                             ..
                         },
                     ..
                 } => {
-                    println!("Key pressed: {:?}", virtual_keycode);
+                    current_key = Some(key_scancode);
+                    // println!("scancode loop: {:?}", current_key);
+                    key_pressed = true;
+
                     if virtual_keycode == VirtualKeyCode::C {
                         let screen = pixels.frame_mut();
                         let mut draw = Draw::new(width, height, screen);
