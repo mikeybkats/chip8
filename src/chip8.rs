@@ -53,6 +53,9 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
         *control_flow = ControlFlow::WaitUntil(start_time + time_per_instruction);
 
         // TODO: how to correctly implement this delay timer?
+        // Instead, figure out a way to implement this in a single thread. I'd recommend one of two approaches:
+        // 1. Keep track of the time the last value was written to the timer register. When reading from the register, calculate how long ago it was written to, and subtract an appropriate value from the result.
+        // 2. Keep track of how many instructions are being executed overall, and subtract 1 from the timer register every N instructions, where N is a large number such that N instructions is about 1/60 second.
         if *registers.get_delay_register() != 0 {
             if delay_timer == 0 {
                 registers.set_delay_register(0);
@@ -62,6 +65,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                 println!("delay timer: {}", delay_timer);
                 let elapsed_time = start_time.elapsed();
                 if elapsed_time < delay {
+                    // this does not work because it halts the program
                     thread::sleep(delay - elapsed_time);
                 } else {
                     println!("Loop took longer than expected!");
