@@ -25,6 +25,7 @@ pub enum GeneralRegisters {
 pub struct Registers {
     general_registers: HashMap<GeneralRegisters, u8>,
     i_register: u16,
+    delay_register: u8,
 }
 impl Registers {
     pub fn new() -> Registers {
@@ -50,6 +51,7 @@ impl Registers {
         Registers {
             general_registers: registers,
             i_register: 0,
+            delay_register: 0,
         }
     }
 
@@ -91,5 +93,13 @@ impl Registers {
 
     pub fn get_i_register(&self) -> &u16 {
         &self.i_register
+    }
+
+    pub fn get_delay_register(&self) -> &u8 {
+        &self.delay_register
+    }
+
+    pub fn set_delay_register(&mut self, value: u8) {
+        self.delay_register = value
     }
 }

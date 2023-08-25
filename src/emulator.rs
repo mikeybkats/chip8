@@ -20,6 +20,7 @@ pub fn execute(
     height: u32,
     rom: &Vec<u8>,
     key_state: KeyPress,
+    delay_timer: u8,
 ) {
     /*
      * NNN: address
@@ -248,15 +249,38 @@ pub fn execute(
         }
 
         0xE => {
+            let stored_key = *registers.get_register(vx_index).unwrap();
             match instruction & 0xFF {
                 // EX9E Skips the next instruction if the key stored in VX is pressed (usually the next instruction is a jump to skip a code block).
                 0x9E => {
-                    // TODO: how do i check for key press in here?
-                    registers.get_register(vx_index);
-                    program_counter.increment();
+                    if *key_state.key_pressed {
+                        match key_state.current_key {
+                            Some(value) => {
+                                if value as u8 == stored_key {
+                                    program_counter.increment();
+                                    program_counter.increment();
+                                    *key_state.key_pressed = false;
+                                }
+                            }
+                            None => {}
+                        }
+                    }
                 }
                 // EXA1 Skips the next instruction if the key stored in VX is not pressed (usually the next instruction is a jump to skip a code block).
-                0xA1 => {}
+                0xA1 => {
+                    if *key_state.key_pressed {
+                        match key_state.current_key {
+                            Some(value) => {
+                                if value as u8 != stored_key {
+                                    program_counter.increment();
+                                    program_counter.increment();
+                                    *key_state.key_pressed = false;
+                                }
+                            }
+                            None => {}
+                        }
+                    }
+                }
                 _ => {}
             }
         }

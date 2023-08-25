@@ -1,4 +1,7 @@
-use std::time::{Duration, Instant};
+use std::{
+    thread,
+    time::{Duration, Instant},
+};
 
 use winit::{
     event::{ElementState, Event, KeyboardInput, ScanCode, VirtualKeyCode, WindowEvent},
@@ -39,12 +42,32 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     // ///////
     test_print(width, height, screen);
     // ///////
+    let mut delay_timer: u8 = 60;
+    let delay = Duration::from_secs_f32(1.0 / 60.0);
+
+    registers.set_delay_register(1);
 
     // main event loop
     event_loop.run(move |event, _, control_flow| {
         let start_time = Instant::now();
-
         *control_flow = ControlFlow::WaitUntil(start_time + time_per_instruction);
+
+        // TODO: how to correctly implement this delay timer?
+        if *registers.get_delay_register() != 0 {
+            if delay_timer == 0 {
+                registers.set_delay_register(0);
+                delay_timer = 60;
+            } else {
+                delay_timer -= 1;
+                println!("delay timer: {}", delay_timer);
+                let elapsed_time = start_time.elapsed();
+                if elapsed_time < delay {
+                    thread::sleep(delay - elapsed_time);
+                } else {
+                    println!("Loop took longer than expected!");
+                }
+            }
+        }
 
         match event {
             // Event::MainEventsCleared case signifies that all the events which were available up to the point of the last call to the event handler have been processed and the event loop is ready to proceed to the next phase of the loop's body.
@@ -68,6 +91,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                     height,
                     &rom,
                     key_state,
+                    delay_timer,
                 );
             }
             Event::WindowEvent {
