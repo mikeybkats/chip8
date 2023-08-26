@@ -104,8 +104,36 @@ impl Registers {
 
     pub fn get_delay_timer(&mut self) -> &u8 {
         // 1. Keep track of the time the last value was written to the timer register. When reading from the register, calculate how long ago it was written to, and subtract an appropriate value from the result.
-        self.delay_timer_duration = self.delay_timer_instant.elapsed();
-        println!("elapsed time: {}", self.delay_timer_duration.as_secs_f32());
+
+        if self.delay_timer != 0 {
+            // get the elapsed time since the last time the delay rimer was set
+            self.delay_timer_duration = self.delay_timer_instant.elapsed();
+            let elapsed_time = self.delay_timer_duration.as_millis() as u8;
+
+            // setting this to 12 because of timing issues.
+            // TODO: consider working exclusively in MS to have more accurate timekeeping
+            let num_millis_in_1_60 = 12 as u8;
+
+            // if elapsed time is greater then a difference can be figured from the total elapsed time and subtracted from the delay timer
+            if elapsed_time > num_millis_in_1_60 {
+                // println!("elapsed time: {} ms", elapsed_time);
+                // find the number of ticks to subtract from DT total
+                let difference = elapsed_time / (num_millis_in_1_60);
+
+                if difference >= 1 {
+                    // check to make sure that the delay timer has enough value for the operation
+                    if self.delay_timer >= difference {
+                        // set the timer with the local method so that it can restart the timer Instant
+                        self.set_delay_timer(self.delay_timer - difference);
+                        // println!("difference: {} ms", difference);
+                    } else {
+                        self.set_delay_timer(self.delay_timer - 1);
+                    }
+                }
+                self.delay_timer;
+                // println!("dt: {} ticks", self.delay_timer);
+            }
+        }
         &self.delay_timer
     }
 
