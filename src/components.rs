@@ -1,6 +1,3 @@
-use std::thread;
-use std::time::Duration;
-
 // // One 16-bit index register called “I” which is used to point at locations in memory
 // pub struct IRegister {}
 // impl IRegister {}

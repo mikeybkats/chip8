@@ -20,7 +20,6 @@ pub fn execute(
     height: u32,
     rom: &Vec<u8>,
     key_state: KeyPress,
-    delay_timer: u8,
 ) {
     /*
      * NNN: address
@@ -41,6 +40,7 @@ pub fn execute(
     let vy_value = *registers.get_register(vy_index).unwrap();
     let vx_index = instruction >> 8 & 0xF;
     let vx_value = *registers.get_register(vx_index).unwrap();
+    let dt = *registers.get_delay_timer();
 
     match first_nibble {
         // 0 Calls machine code routine at address NNN - not be needed for emulator
@@ -249,7 +249,7 @@ pub fn execute(
         }
 
         0xE => {
-            let stored_key = *registers.get_register(vx_index).unwrap();
+            let stored_key = vx_value;
             match instruction & 0xFF {
                 // EX9E Skips the next instruction if the key stored in VX is pressed (usually the next instruction is a jump to skip a code block).
                 0x9E => {
@@ -289,8 +289,7 @@ pub fn execute(
             match instruction & 0xFF {
                 // FX07	Sets VX to the value of the delay timer.
                 0x07 => {
-                    // TODO: implement delay timer
-                    registers.set_register(vx_index, 0);
+                    registers.set_register(vx_index, dt);
                 }
                 // FX0A	A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event).
                 0x0A => {
@@ -306,6 +305,9 @@ pub fn execute(
                     }
                 }
                 // FX15	Sets the delay timer to VX.
+                0x15 => {
+                    registers.set_delay_timer(vx_value);
+                }
                 // FX18	Sets the sound timer to VX.
                 // FX1E	Adds VX to I. VF is not affected.[c]
                 // FX29	Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.

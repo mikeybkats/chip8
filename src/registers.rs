@@ -1,4 +1,7 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    time::{Duration, Instant},
+};
 
 // // 16 8-bit (one byte) general-purpose variable registers numbered 0 through F hexadecimal, ie. 0 through 15 in decimal, called V0 through VF
 // // VF is also used as a flag register; many instructions will set it to either 1 or 0 based on some rule, for example using it as a carry flag
@@ -25,7 +28,9 @@ pub enum GeneralRegisters {
 pub struct Registers {
     general_registers: HashMap<GeneralRegisters, u8>,
     i_register: u16,
-    delay_register: u8,
+    delay_timer: u8,
+    delay_timer_instant: Instant,
+    delay_timer_duration: Duration,
 }
 impl Registers {
     pub fn new() -> Registers {
@@ -51,7 +56,9 @@ impl Registers {
         Registers {
             general_registers: registers,
             i_register: 0,
-            delay_register: 0,
+            delay_timer: 60,
+            delay_timer_instant: Instant::now(),
+            delay_timer_duration: Duration::new(0, 0),
         }
     }
 
@@ -95,11 +102,15 @@ impl Registers {
         &self.i_register
     }
 
-    pub fn get_delay_register(&self) -> &u8 {
-        &self.delay_register
+    pub fn get_delay_timer(&mut self) -> &u8 {
+        // 1. Keep track of the time the last value was written to the timer register. When reading from the register, calculate how long ago it was written to, and subtract an appropriate value from the result.
+        self.delay_timer_duration = self.delay_timer_instant.elapsed();
+        println!("elapsed time: {}", self.delay_timer_duration.as_secs_f32());
+        &self.delay_timer
     }
 
-    pub fn set_delay_register(&mut self, value: u8) {
-        self.delay_register = value
+    pub fn set_delay_timer(&mut self, value: u8) {
+        self.delay_timer_instant = Instant::now();
+        self.delay_timer = value
     }
 }

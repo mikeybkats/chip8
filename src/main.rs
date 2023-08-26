@@ -13,7 +13,6 @@ mod display;
 mod draw;
 mod emulator;
 mod font;
-mod memory;
 mod program_counter;
 mod registers;
 mod stack;
