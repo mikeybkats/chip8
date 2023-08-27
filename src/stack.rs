@@ -16,7 +16,7 @@ impl Stack {
 
     pub fn push(&mut self, value: u16) {
         self.stack[self.sp] = value;
-        self.increment();
+        self.sp_increment();
     }
 
     // pub fn pop(&mut self) -> u16 {
@@ -25,7 +25,7 @@ impl Stack {
     //     return_value
     // }
 
-    pub fn increment(&mut self) -> usize {
+    pub fn sp_increment(&mut self) -> usize {
         self.sp += 1;
         self.sp
     }

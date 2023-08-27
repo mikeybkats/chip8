@@ -68,16 +68,24 @@ pub fn execute(
         0x1 => {
             // 178D
             let nnn = instruction & 0xFFF;
+            // println!("jumping to locaion: {}, {:03X}", nnn, nnn);
+            // println!("nnn as usize: {}", nnn as usize);
+            // println!(
+            //     "memory @0x{:03X}: {:02X}",
+            //     nnn,
+            //     memory.get_memory().get(nnn as usize).unwrap(),
+            // );
             program_counter.jump(nnn);
         }
 
         // 2NNN Calls subroutine at NNN
         // The interpreter increments the stack pointer, then puts the current PC on the top of the stack. The PC is then set to nnn.
         0x2 => {
-            // increment stack pointer
-            let new_current = program_counter.increment();
-            // push current PC to top of stack
-            stack.push(new_current);
+            let pc = program_counter.get_pc() as u16;
+
+            // push current PC to top of stack, which increments the SP
+            stack.push(pc);
+
             // set PC to NNN
             let nnn = instruction & 0xFFF;
             program_counter.jump(nnn)
@@ -98,10 +106,12 @@ pub fn execute(
 
         // 4XNN Skips the next instruction if VX does not equal NN (usually the next instruction is a jump to skip a code block).
         0x4 => {
-            // get kk
-            let kk = (instruction & 0xFF) as u8;
+            // get NN
+            let nn = (instruction & 0xFF) as u8;
+            println!("nn: {:02X}, vx_value: {:02X}", nn, vx_value);
+
             // compares
-            if kk != vx_value {
+            if nn != vx_value {
                 // skip next instruction by incrementing PC by two
                 program_counter.increment();
                 program_counter.increment();
@@ -224,15 +234,20 @@ pub fn execute(
 
         // CXNN Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
         0xC => {
-            let nn = instruction & 0xFF;
-            let random_number = rand::random::<u16>();
-            let x = (random_number & nn) as u8;
+            let nn = (instruction & 0xFF) as u8;
+            let random_number = rand::random::<u8>();
+            let x = random_number & nn;
+            println!(
+                "nn: {:02X}, random: {:02X}, vx: {:02X}",
+                nn, random_number, x
+            );
             registers.set_register(vx_index, x);
         }
 
         // DXYN Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels. Each row of 8 pixels is read as bit-coded starting from memory location I; I value does not change after the execution of this instruction. As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen.
         0xD => {
             let height = (instruction & 0xF) as u8;
+            println!("height: {}", height);
 
             let length = 8 * height as usize;
             let location = *registers.get_i_register() as usize;
@@ -371,10 +386,11 @@ pub fn _decode(_command: bool) -> bool {
 
 /* Fetches the program instruction from the chip8 Rom */
 pub fn fetch(
-    rom: &Vec<u8>,
+    rom: &mut [u8],
     program_counter: &mut ProgramCounter,
     rom_length: usize,
 ) -> Option<u16> {
+    // println!("program counter: {}", program_counter.get_pc());
     if program_counter.get_pc() < rom_length - 1 {
         let instruction1 = *rom.get(program_counter.get_pc()).unwrap() as u16;
         program_counter.increment();
@@ -390,15 +406,16 @@ pub fn fetch(
 
 /* Fetches and formats the program instruction from the chip8 Rom */
 pub fn fetch_instruction(
-    rom: &Vec<u8>,
+    memory: &mut [u8],
     program_counter: &mut ProgramCounter,
     rom_length: usize,
 ) -> u16 {
-    match fetch(&rom, program_counter, rom_length) {
+    match fetch(memory, program_counter, rom_length) {
         // :04X specifies a width of 4 with leading zeros
-        // Some(integer) => format!("{:04X}", integer),
-        Some(integer) => integer,
-        // _ => String::from("0000"),
+        Some(instruction) => {
+            println!("instruction: {:04X}", instruction);
+            instruction
+        }
         _ => 0x0,
     }
 }

@@ -26,13 +26,19 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
 
     let mut stack = Stack::new();
     let mut program_counter = ProgramCounter::new();
+    program_counter.set_counter(512);
     let mut registers = Registers::new();
-    // let screen = pixels.frame_mut();
     let mut current_key: Option<ScanCode> = None;
     let mut key_pressed: bool = false;
     let mut memory = Memory::new();
     memory.set_rom(&rom).unwrap();
     memory.set_fonts();
+
+    for (index, &byte) in memory.get_memory().iter().enumerate() {
+        if index > 511 {
+            print!("{:X}", byte);
+        }
+    }
 
     // ///////
     // test_print(width, height, screen, &mut memory);
@@ -48,7 +54,8 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
             Event::MainEventsCleared => {
                 // fetch
                 let rom_length = rom.len();
-                let instruction = fetch_instruction(&rom, &mut program_counter, rom_length);
+                let instruction =
+                    fetch_instruction(memory.get_memory(), &mut program_counter, rom_length);
 
                 let key_state = KeyPress {
                     current_key,
