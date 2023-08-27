@@ -1,9 +1,10 @@
 use pixels::Pixels;
+use winit::event::ScanCode;
 
 use crate::{
-    chip8::KeyPress,
     draw::{Draw, Point, Sprite},
     font::Font,
+    memory::Memory,
     program_counter::ProgramCounter,
     registers::Registers,
     stack::Stack,
@@ -12,13 +13,14 @@ use crate::{
 // TODO: how does execute get access to all the methods it needs?
 pub fn execute(
     instruction: u16,
+    memory: &mut Memory,
     stack: &mut Stack,
     registers: &mut Registers,
     program_counter: &mut ProgramCounter,
     pixels: &mut Pixels,
     width: u32,
     height: u32,
-    rom: &Vec<u8>,
+    // rom: &Vec<u8>,
     key_state: KeyPress,
 ) {
     /*
@@ -41,6 +43,7 @@ pub fn execute(
     let vx_index = instruction >> 8 & 0xF;
     let vx_value = *registers.get_register(vx_index).unwrap();
     let dt = *registers.get_delay_timer();
+    let i = *registers.get_i_register();
 
     match first_nibble {
         // 0 Calls machine code routine at address NNN - not be needed for emulator
@@ -63,8 +66,8 @@ pub fn execute(
         // The interpreter sets the program counter to nnn.
         0x1 => {
             // 178D
-            let location = instruction & 0xFFF;
-            program_counter.jump(location);
+            let nnn = instruction & 0xFFF;
+            program_counter.jump(nnn);
         }
 
         // 2NNN Calls subroutine at NNN
@@ -237,7 +240,8 @@ pub fn execute(
                 x: vx_value as usize,
                 y: vy_value as usize,
             };
-            let sprite = Sprite::new(8, height, &rom[location..length]);
+            let active_memory = memory.get_memory();
+            let sprite = Sprite::new(8, height, &active_memory[location..length]);
 
             draw.blit_drawable(dest, &sprite);
 
@@ -309,11 +313,24 @@ pub fn execute(
                     registers.set_delay_timer(vx_value);
                 }
                 // FX18	Sets the sound timer to VX.
+                0x18 => {
+                    // TODO: implement sound
+                }
                 // FX1E	Adds VX to I. VF is not affected.[c]
+                0x1E => {
+                    registers.set_i_register(i + vx_value as u16);
+                }
                 // FX29	Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.
+                0x29 => {
+                    let character_sprite_location = vx_value * 5;
+                    registers.set_i_register(character_sprite_location as u16);
+                }
                 // FX33	Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
+                0x33 => {}
                 // FX55	Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.[d]
+                0x55 => {}
                 // FX65	Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified.[d]
+                0x65 => {}
                 _ => (),
             }
         }
@@ -375,7 +392,7 @@ pub fn fetch_instruction(
 }
 
 /** Prints a font ramp and pixels to demonstrate the edge of the four screen corners */
-pub fn test_print(width: u32, height: u32, screen: &mut [u8]) {
+pub fn test_print(width: u32, height: u32, screen: &mut [u8], memory: &mut Memory) {
     let mut draw = Draw::new(width, height, screen);
 
     draw.draw_pixel(&Point { x: 0, y: 0 });
@@ -385,12 +402,12 @@ pub fn test_print(width: u32, height: u32, screen: &mut [u8]) {
 
     let font = Font::new();
     assert_eq!(
-        font.get_character(&'1').unwrap().clone(),
-        &[0x20, 0x60, 0x20, 0x20, 0x70]
+        font.get_character(&0x1).unwrap().clone(),
+        [0x20, 0x60, 0x20, 0x20, 0x70]
     );
 
     let char_set = [
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
+        0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF,
     ];
 
     let mut count = 0;
@@ -405,4 +422,19 @@ pub fn test_print(width: u32, height: u32, screen: &mut [u8]) {
         draw.blit_drawable(&Point { x, y }, font.get_font_sprite(&character).unwrap());
         count += 1;
     }
+
+    let active_memory = memory.get_memory();
+
+    let zero = Font::convert_font_to_sprite(&active_memory[0..5]);
+    let zero_sprite = Sprite::new(8, 5, &zero);
+    let f = Font::convert_font_to_sprite(&active_memory[75..80]);
+    let f_sprite = Sprite::new(8, 5, &f);
+    draw.blit_drawable(&Point { x: 20, y: 22 }, &zero_sprite);
+    draw.blit_drawable(&Point { x: 28, y: 27 }, &f_sprite);
+}
+
+#[derive(Debug)]
+pub struct KeyPress<'a> {
+    pub current_key: Option<ScanCode>,
+    pub key_pressed: &'a mut bool,
 }

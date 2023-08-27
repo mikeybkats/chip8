@@ -25,44 +25,69 @@
 // */
 // // static mut RAM: [u8; 4096] = [0; 4096];
 
-// pub struct Memory {
-//     ram: [u8; 4096],
-// }
-// impl Memory {
-//     // the first 512 blocks of memory are empty, because the original chip8 used these to store the interpreter software
-//     pub fn new() -> Memory {
-//         Memory { ram: [0; 4096] }
-//     }
+use crate::font::get_character_set;
 
-//     /** Returns the RAM value at the given address. */
-//     fn _peek(&self, address: usize) -> u8 {
-//         self.ram[address]
-//     }
+pub struct Memory {
+    ram: [u8; 4096],
+}
+impl Memory {
+    // the first 512 blocks of memory are empty, because the original chip8 used these to store the interpreter software
+    pub fn new() -> Memory {
+        let ram: [u8; 4096] = [0; 4096];
+        Memory { ram }
+    }
 
-//     /** Sets the RAM value at the given address to the given value. */
-//     fn _poke(&mut self, address: usize, value: u8) {
-//         self.ram[address] = value;
-//     }
+    pub fn set_fonts(&mut self) {
+        let char_set = [
+            0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF,
+        ];
+        let fonts = get_character_set();
+        let ram_len = self.ram.len();
 
-//     // pub fn get_stack_memory(&mut self) -> &mut [u8] {
-//     //     &mut self.ram[0..512]
-//     // }
+        for (index, char) in char_set.iter().enumerate() {
+            let base_index = index * 5;
 
-//     // pub fn get_rom_memory(&mut self) -> &mut [u8] {
-//     //     &mut self.ram[512..]
-//     // }
+            let font = fonts.get(char).unwrap();
 
-//     /** Sets a rom to the program space in the chip8 memory */
-//     pub fn set_rom(&mut self, rom: &Vec<u8>) -> Result<[u8; 4096], String> {
-//         let rom_len = rom.len();
-//         let end_index = 512 + rom_len;
-//         if rom_len <= self.ram.len() - 512 {
-//             self.ram[512..end_index].copy_from_slice(&rom);
-//             Ok(self.ram)
-//         } else {
-//             Err(String::from(
-//                 "Not enough space in the array to copy new values.",
-//             ))
-//         }
-//     }
-// }
+            if base_index + 5 <= ram_len {
+                self.ram[base_index..base_index + 5].copy_from_slice(font);
+            }
+        }
+    }
+
+    /** Returns the RAM value at the given address. */
+    fn _peek(&self, address: usize) -> u8 {
+        self.ram[address]
+    }
+
+    /** Sets the RAM value at the given address to the given value. */
+    fn _poke(&mut self, address: usize, value: u8) {
+        self.ram[address] = value;
+    }
+
+    // pub fn get_stack_memory(&mut self) -> &mut [u8] {
+    //     &mut self.ram[0..512]
+    // }
+
+    // pub fn get_rom_memory(&mut self) -> &mut [u8] {
+    //     &mut self.ram[512..]
+    // }
+
+    pub fn get_memory(&mut self) -> &mut [u8] {
+        &mut self.ram
+    }
+
+    /** Sets a rom to the program space in the chip8 memory */
+    pub fn set_rom(&mut self, rom: &Vec<u8>) -> Result<&[u8], String> {
+        let rom_len = rom.len();
+        let end_index = 512 + rom_len;
+        if rom_len <= self.ram.len() - 512 {
+            self.ram[512..end_index].copy_from_slice(&rom);
+            Ok(&self.ram)
+        } else {
+            Err(String::from(
+                "Not enough space in the array to copy new values.",
+            ))
+        }
+    }
+}

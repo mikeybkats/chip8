@@ -19,27 +19,27 @@ impl Stack {
         self.increment();
     }
 
-    pub fn pop(&mut self) -> u16 {
-        let return_value = self.stack[self.sp];
-        self.decrement();
-        return_value
-    }
+    // pub fn pop(&mut self) -> u16 {
+    //     let return_value = self.stack[self.sp];
+    //     self.decrement();
+    //     return_value
+    // }
 
     pub fn increment(&mut self) -> usize {
         self.sp += 1;
         self.sp
     }
 
-    pub fn decrement(&mut self) -> usize {
-        self.sp -= 1;
-        self.sp
-    }
+    // pub fn decrement(&mut self) -> usize {
+    //     self.sp -= 1;
+    //     self.sp
+    // }
 
     pub fn jump_to_address(&mut self, value: usize) {
         self.sp = value;
     }
 
-    pub fn get_sp(&self) -> usize {
-        self.sp
-    }
+    // pub fn get_sp(&self) -> usize {
+    //     self.sp
+    // }
 }

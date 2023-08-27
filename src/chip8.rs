@@ -8,22 +8,12 @@ use winit::{
 use crate::{
     display::{build_pixels, build_window},
     draw::Draw,
-    emulator::{execute, fetch_instruction, test_print},
+    emulator::{execute, fetch_instruction, test_print, KeyPress},
+    memory::Memory,
     program_counter::ProgramCounter,
     registers::Registers,
     stack::Stack,
 };
-
-#[derive(Debug)]
-pub struct KeyPress<'a> {
-    pub current_key: Option<ScanCode>,
-    pub key_pressed: &'a mut bool,
-}
-
-// pub struct DelayTimer<'a> {
-//     delay_timer: &'a mut u8,
-//     delay_timer_written: Instant,
-// }
 
 pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     let event_loop = EventLoop::new();
@@ -40,38 +30,18 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     let screen = pixels.frame_mut();
     let mut current_key: Option<ScanCode> = None;
     let mut key_pressed: bool = false;
+    let mut memory = Memory::new();
+    memory.set_rom(&rom).unwrap();
+    memory.set_fonts();
 
     // ///////
-    test_print(width, height, screen);
+    test_print(width, height, screen, &mut memory);
     // ///////
 
     // main event loop
     event_loop.run(move |event, _, control_flow| {
         let start_time = Instant::now();
         *control_flow = ControlFlow::WaitUntil(start_time + time_per_instruction);
-
-        // TODO: how to correctly implement this delay timer?
-        // Instead, figure out a way to implement this in a single thread. I'd recommend one of two approaches:
-
-        // 1. Keep track of the time the last value was written to the timer register. When reading from the register, calculate how long ago it was written to, and subtract an appropriate value from the result.
-
-        // 2. Keep track of how many instructions are being executed overall, and subtract 1 from the timer register every N instructions, where N is a large number such that N instructions is about 1/60 second.
-        // if *registers.get_delay_register() != 0 {
-        //     if delay_timer == 0 {
-        //         registers.set_delay_register(0);
-        //         delay_timer = 60;
-        //     } else {
-        //         delay_timer -= 1;
-        //         println!("delay timer: {}", delay_timer);
-        //         let elapsed_time = start_time.elapsed();
-        //         if elapsed_time < delay {
-        //             // this does not work because it halts the program
-        //             thread::sleep(delay - elapsed_time);
-        //         } else {
-        //             println!("Loop took longer than expected!");
-        //         }
-        //     }
-        // }
 
         match event {
             // Event::MainEventsCleared case signifies that all the events which were available up to the point of the last call to the event handler have been processed and the event loop is ready to proceed to the next phase of the loop's body.
@@ -87,13 +57,13 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
 
                 execute(
                     instruction,
+                    &mut memory,
                     &mut stack,
                     &mut registers,
                     &mut program_counter,
                     &mut pixels,
                     width,
                     height,
-                    &rom,
                     key_state,
                 );
             }
