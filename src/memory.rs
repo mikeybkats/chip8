@@ -25,7 +25,7 @@
 // */
 // // static mut RAM: [u8; 4096] = [0; 4096];
 
-use crate::font::get_character_set;
+use crate::font::{get_character_set, CHAR_SET};
 
 pub struct Memory {
     ram: [u8; 4096],
@@ -38,13 +38,10 @@ impl Memory {
     }
 
     pub fn set_fonts(&mut self) {
-        let char_set = [
-            0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF,
-        ];
         let fonts = get_character_set();
         let ram_len = self.ram.len();
 
-        for (index, char) in char_set.iter().enumerate() {
+        for (index, char) in CHAR_SET.iter().enumerate() {
             let base_index = index * 5;
 
             let font = fonts.get(char).unwrap();

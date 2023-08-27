@@ -3,7 +3,7 @@ use winit::event::ScanCode;
 
 use crate::{
     draw::{Draw, Point, Sprite},
-    font::Font,
+    font::{Font, CHAR_SET},
     memory::Memory,
     program_counter::ProgramCounter,
     registers::Registers,
@@ -406,13 +406,9 @@ pub fn test_print(width: u32, height: u32, screen: &mut [u8], memory: &mut Memor
         [0x20, 0x60, 0x20, 0x20, 0x70]
     );
 
-    let char_set = [
-        0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF,
-    ];
-
     let mut count = 0;
     let mut y = 3;
-    for character in char_set {
+    for character in CHAR_SET {
         let mut x = 2 + (count * 5);
         if count == 10 {
             count = 0;
@@ -423,8 +419,8 @@ pub fn test_print(width: u32, height: u32, screen: &mut [u8], memory: &mut Memor
         count += 1;
     }
 
+    // This lower portion tests the retrieval of fonts from chip8 memory. this is how it will work in the application when executing instructions.
     let active_memory = memory.get_memory();
-
     let zero = Font::convert_font_to_sprite(&active_memory[0..5]);
     let zero_sprite = Sprite::new(8, 5, &zero);
     let f = Font::convert_font_to_sprite(&active_memory[75..80]);
