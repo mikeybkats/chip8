@@ -8,7 +8,7 @@ use winit::{
 use crate::{
     display::{build_pixels, build_window},
     draw::Draw,
-    emulator::{execute, fetch_instruction, test_print, KeyPress},
+    emulator::{execute, fetch_instruction, KeyPress},
     memory::Memory,
     program_counter::ProgramCounter,
     registers::Registers,
@@ -27,7 +27,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     let mut stack = Stack::new();
     let mut program_counter = ProgramCounter::new();
     let mut registers = Registers::new();
-    let screen = pixels.frame_mut();
+    // let screen = pixels.frame_mut();
     let mut current_key: Option<ScanCode> = None;
     let mut key_pressed: bool = false;
     let mut memory = Memory::new();
@@ -35,7 +35,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     memory.set_fonts();
 
     // ///////
-    test_print(width, height, screen, &mut memory);
+    // test_print(width, height, screen, &mut memory);
     // ///////
 
     // main event loop

@@ -52,12 +52,13 @@ pub fn get_character_set() -> HashMap<u8, [u8; 5]> {
 /**
  * Font the typeface program for chip 8
  */
+#[warn(dead_code)]
 pub struct Font {
     char_set: HashMap<u8, [u8; 5]>,
     sprites: HashMap<u8, FontSprite>,
 }
 impl Font {
-    pub fn new() -> Font {
+    pub fn _new() -> Font {
         let char_set = get_character_set();
 
         let mut sprites: HashMap<u8, FontSprite> = HashMap::new();

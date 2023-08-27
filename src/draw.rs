@@ -15,7 +15,7 @@ impl Draw<'_> {
     }
 
     /* Draws pixel to x, y coordinates  */
-    pub fn draw_pixel(&mut self, dest: &Point) {
+    pub fn _draw_pixel(&mut self, dest: &Point) {
         assert!(dest.x <= self.width);
         assert!(dest.y <= self.height);
 

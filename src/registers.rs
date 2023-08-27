@@ -62,7 +62,7 @@ impl Registers {
         }
     }
 
-    fn match_register(&self, index: u16) -> Option<GeneralRegisters> {
+    fn match_register(&self, index: u8) -> Option<GeneralRegisters> {
         match index {
             0x0 => Some(GeneralRegisters::VZero),
             0x1 => Some(GeneralRegisters::VOne),
@@ -84,12 +84,12 @@ impl Registers {
         }
     }
 
-    pub fn set_register(&mut self, index: u16, value: u8) -> Option<u8> {
+    pub fn set_register(&mut self, index: u8, value: u8) -> Option<u8> {
         let register = self.match_register(index).unwrap();
         self.general_registers.insert(register, value)
     }
 
-    pub fn get_register(&self, index: u16) -> Option<&u8> {
+    pub fn get_register(&self, index: u8) -> Option<&u8> {
         let register = self.match_register(index).unwrap();
         self.general_registers.get(&register)
     }

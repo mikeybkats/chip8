@@ -38,12 +38,13 @@ pub fn execute(
 
     let mut draw = Draw::new(width, height, screen);
 
-    let vy_index = instruction >> 4 & 0xF;
+    let vy_index = (instruction >> 4 & 0xF) as u8;
     let vy_value = *registers.get_register(vy_index).unwrap();
-    let vx_index = instruction >> 8 & 0xF;
+    let vx_index = (instruction >> 8 & 0xF) as u8;
     let vx_value = *registers.get_register(vx_index).unwrap();
     let dt = *registers.get_delay_timer();
     let i = *registers.get_i_register();
+    let active_memory = memory.get_memory();
 
     match first_nibble {
         // 0 Calls machine code routine at address NNN - not be needed for emulator
@@ -240,12 +241,11 @@ pub fn execute(
                 x: vx_value as usize,
                 y: vy_value as usize,
             };
-            let active_memory = memory.get_memory();
             let sprite = Sprite::new(8, height, &active_memory[location..length]);
 
             draw.blit_drawable(dest, &sprite);
 
-            println!("instruction: {:X}", instruction & 0xFF);
+            println!("Blit Drawable");
             // println!("instruction: {:X}, height: {}", instruction, height);
             // println!("location: {}, length: {}", location, length);
             // println!("vx: {}, vy: {}", vx_value, vy_value);
@@ -326,11 +326,23 @@ pub fn execute(
                     registers.set_i_register(character_sprite_location as u16);
                 }
                 // FX33	Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
-                0x33 => {}
+                0x33 => registers.set_i_register(vx_value as u16),
                 // FX55	Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.[d]
-                0x55 => {}
+                0x55 => {
+                    for (index, hex) in CHAR_SET.iter().enumerate() {
+                        let reg_value = registers.get_register(*hex).unwrap();
+                        let i = *registers.get_i_register() as usize;
+                        active_memory[i + index] = *reg_value;
+                    }
+                }
                 // FX65	Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified.[d]
-                0x65 => {}
+                0x65 => {
+                    for (index, hex) in CHAR_SET.iter().enumerate() {
+                        let i = *registers.get_i_register() as usize;
+                        let value = active_memory[i + index];
+                        registers.set_register(*hex, value);
+                    }
+                }
                 _ => (),
             }
         }
@@ -392,15 +404,15 @@ pub fn fetch_instruction(
 }
 
 /** Prints a font ramp and pixels to demonstrate the edge of the four screen corners */
-pub fn test_print(width: u32, height: u32, screen: &mut [u8], memory: &mut Memory) {
+pub fn _test_print(width: u32, height: u32, screen: &mut [u8], memory: &mut Memory) {
     let mut draw = Draw::new(width, height, screen);
 
-    draw.draw_pixel(&Point { x: 0, y: 0 });
-    draw.draw_pixel(&Point { x: 63, y: 0 });
-    draw.draw_pixel(&Point { x: 0, y: 31 });
-    draw.draw_pixel(&Point { x: 63, y: 31 });
+    draw._draw_pixel(&Point { x: 0, y: 0 });
+    draw._draw_pixel(&Point { x: 63, y: 0 });
+    draw._draw_pixel(&Point { x: 0, y: 31 });
+    draw._draw_pixel(&Point { x: 63, y: 31 });
 
-    let font = Font::new();
+    let font = Font::_new();
     assert_eq!(
         font.get_character(&0x1).unwrap().clone(),
         [0x20, 0x60, 0x20, 0x20, 0x70]
