@@ -45,7 +45,7 @@ impl Draw<'_> {
         for _i in 0..sprite.height() {
             for j in 0..sprite.width() {
                 let loc = draw_point + (j * 4);
-                if sprite.pixels()[count] == 1 {
+                if sprite.pixels()[count] > 0 {
                     self.screen[loc] = 0xE2;
                     self.screen[loc + 1] = 0x1B;
                     self.screen[loc + 2] = 0x88;
@@ -58,10 +58,10 @@ impl Draw<'_> {
                     //     || self.screen[loc + 2] > 0
                     //     || self.screen[loc + 3] > 0
                     // {
-                    //     self.screen[loc] = 0x0;
-                    //     self.screen[loc + 1] = 0x0;
-                    //     self.screen[loc + 2] = 0x0;
-                    //     self.screen[loc + 3] = 0x0;
+                    // self.screen[loc] = 0x0;
+                    // self.screen[loc + 1] = 0x0;
+                    // self.screen[loc + 2] = 0x0;
+                    // self.screen[loc + 3] = 0x0;
                     // }
                 }
                 count += 1;

@@ -34,11 +34,11 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     memory.set_rom(&rom).unwrap();
     memory.set_fonts();
 
-    for (index, &byte) in memory.get_memory().iter().enumerate() {
-        if index > 511 {
-            print!("{:X}", byte);
-        }
-    }
+    // for (index, &byte) in memory.get_memory().iter().enumerate() {
+    //     if index > 510 {
+    //         print!("{:X}", byte);
+    //     }
+    // }
 
     // ///////
     // test_print(width, height, screen, &mut memory);

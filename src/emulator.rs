@@ -52,7 +52,10 @@ pub fn execute(
             // 00E0 - clears screen
             // println!("instruction 1: {}", instruction);
             match instruction {
-                0x00E0 => draw.clear(),
+                0x00E0 => {
+                    println!("clearing screen");
+                    draw.clear()
+                }
                 0x00EE => {
                     // Return from a subroutine.
                     // The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
@@ -130,6 +133,7 @@ pub fn execute(
         // 6XNN Sets VX to NN.
         0x6 => {
             let nn = ((instruction as usize) & 0xFF) as u8;
+            println!("vx index: {:0X}", vx_index);
             registers.set_register(vx_index, nn);
         }
 
@@ -252,11 +256,20 @@ pub fn execute(
             let length = 8 * height as usize;
             let location = *registers.get_i_register() as usize;
 
+            println!("location of sprite: {}", location);
+
+            for (index, &byte) in active_memory.iter().enumerate() {
+                if index > location - 1 && index < location + length {
+                    print!("{:X}", byte);
+                }
+            }
+            println!("");
+
             let dest = &Point {
                 x: vx_value as usize,
                 y: vy_value as usize,
             };
-            let sprite = Sprite::new(8, height, &active_memory[location..length]);
+            let sprite = Sprite::new(8, height, &active_memory[location..location + length]);
 
             draw.blit_drawable(dest, &sprite);
 
@@ -264,7 +277,10 @@ pub fn execute(
             // println!("instruction: {:X}, height: {}", instruction, height);
             // println!("location: {}, length: {}", location, length);
             // println!("vx: {}, vy: {}", vx_value, vy_value);
-            // println!("pixels {:?}", &rom[location..length]);
+            // println!(
+            //     "pixels {:04X?}",
+            //     &active_memory[location..location + length]
+            // );
         }
 
         0xE => {
@@ -390,8 +406,12 @@ pub fn fetch(
     program_counter: &mut ProgramCounter,
     rom_length: usize,
 ) -> Option<u16> {
-    // println!("program counter: {}", program_counter.get_pc());
-    if program_counter.get_pc() < rom_length - 1 {
+    // println!(
+    //     "program counter: {}, rom length: {}",
+    //     program_counter.get_pc(),
+    //     rom_length
+    // );
+    if (program_counter.get_pc() - 512) < rom_length - 1 {
         let instruction1 = *rom.get(program_counter.get_pc()).unwrap() as u16;
         program_counter.increment();
         let instruction2 = *rom.get(program_counter.get_pc()).unwrap() as u16;
@@ -413,7 +433,7 @@ pub fn fetch_instruction(
     match fetch(memory, program_counter, rom_length) {
         // :04X specifies a width of 4 with leading zeros
         Some(instruction) => {
-            println!("instruction: {:04X}", instruction);
+            // println!("instruction: {:04X}", instruction);
             instruction
         }
         _ => 0x0,
