@@ -251,29 +251,34 @@ pub fn execute(
         // DXYN Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels. Each row of 8 pixels is read as bit-coded starting from memory location I; I value does not change after the execution of this instruction. As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen.
         0xD => {
             let height = (instruction & 0xF) as u8;
-            println!("height: {}", height);
+            // println!("height: {}", height);
 
             let length = 8 * height as usize;
             let location = *registers.get_i_register() as usize;
+            let pixels = &active_memory[location..location + length];
+            let x = vx_value as usize;
+            let y = vy_value as usize;
 
-            println!("location of sprite: {}", location);
+            draw.blit_raw(pixels, x, y, height);
 
-            for (index, &byte) in active_memory.iter().enumerate() {
-                if index > location - 1 && index < location + length {
-                    print!("{:X}", byte);
-                }
-            }
-            println!("");
+            // println!("location of sprite: {}", location);
 
-            let dest = &Point {
-                x: vx_value as usize,
-                y: vy_value as usize,
-            };
-            let sprite = Sprite::new(8, height, &active_memory[location..location + length]);
+            // for (index, &byte) in active_memory.iter().enumerate() {
+            //     if index > location - 1 && index < location + length {
+            //         print!("{:X}", byte);
+            //     }
+            // }
+            // println!("");
 
-            draw.blit_drawable(dest, &sprite);
+            // let dest = &Point {
+            //     x: vx_value as usize,
+            //     y: vy_value as usize,
+            // };
+            // let sprite = Sprite::new(8, height, &active_memory[location..location + length]);
 
-            println!("Blit Drawable");
+            // draw.blit_drawable(dest, &sprite);
+
+            // println!("Blit Drawable");
             // println!("instruction: {:X}, height: {}", instruction, height);
             // println!("location: {}, length: {}", location, length);
             // println!("vx: {}, vy: {}", vx_value, vy_value);
@@ -444,10 +449,10 @@ pub fn fetch_instruction(
 pub fn _test_print(width: u32, height: u32, screen: &mut [u8], memory: &mut Memory) {
     let mut draw = Draw::new(width, height, screen);
 
-    draw._draw_pixel(&Point { x: 0, y: 0 });
-    draw._draw_pixel(&Point { x: 63, y: 0 });
-    draw._draw_pixel(&Point { x: 0, y: 31 });
-    draw._draw_pixel(&Point { x: 63, y: 31 });
+    draw.draw_pixel(&Point { x: 0, y: 0 });
+    draw.draw_pixel(&Point { x: 63, y: 0 });
+    draw.draw_pixel(&Point { x: 0, y: 31 });
+    draw.draw_pixel(&Point { x: 63, y: 31 });
 
     let font = Font::_new();
     assert_eq!(

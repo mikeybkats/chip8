@@ -15,7 +15,7 @@ impl Draw<'_> {
     }
 
     /* Draws pixel to x, y coordinates  */
-    pub fn _draw_pixel(&mut self, dest: &Point) {
+    pub fn draw_pixel(&mut self, dest: &Point) {
         assert!(dest.x <= self.width);
         assert!(dest.y <= self.height);
 
@@ -24,6 +24,39 @@ impl Draw<'_> {
         for (i, pixel) in self.screen.chunks_exact_mut(4).enumerate() {
             if i == base_point {
                 pixel[0..4].copy_from_slice(&[0xE2, 0x1B, 0x88, 0xff]);
+            }
+        }
+    }
+
+    pub fn _binary_to_sprite(bin: &[u8]) -> Vec<u8> {
+        let mut pixels: Vec<u8> = Vec::new();
+        for row in bin.iter() {
+            // {:b} is binary format
+            // {:08b} formats the number as 8-bit binary with leading zeros
+            let binary_string = format!("{:08b}", row);
+
+            for bit in binary_string.chars() {
+                if let Some(bit_value) = bit.to_digit(2) {
+                    pixels.push(bit_value as u8);
+                }
+            }
+        }
+        pixels
+    }
+
+    pub fn blit_raw(&mut self, pixels: &[u8], x: usize, y: usize, height: u8) {
+        for (i_height, &byte) in pixels.iter().enumerate() {
+            for i_width in (0..8).rev() {
+                let bit = (byte >> i_width) & 1;
+
+                if bit == 1 && i_height <= height as usize {
+                    let dest = &Point {
+                        x: x + i_width,
+                        y: y + i_height,
+                    };
+
+                    self.draw_pixel(dest)
+                }
             }
         }
     }
@@ -45,7 +78,7 @@ impl Draw<'_> {
         for _i in 0..sprite.height() {
             for j in 0..sprite.width() {
                 let loc = draw_point + (j * 4);
-                if sprite.pixels()[count] > 0 {
+                if sprite.pixels()[count] == 1 {
                     self.screen[loc] = 0xE2;
                     self.screen[loc + 1] = 0x1B;
                     self.screen[loc + 2] = 0x88;
@@ -79,6 +112,7 @@ impl Draw<'_> {
 }
 
 /* A position vector */
+#[derive(Debug)]
 pub struct Point {
     pub x: usize,
     pub y: usize,
