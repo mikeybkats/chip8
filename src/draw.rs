@@ -44,22 +44,66 @@ impl Draw<'_> {
         pixels
     }
 
-    pub fn blit_raw(&mut self, pixels: &[u8], x: usize, y: usize, height: u8) {
-        for (i_height, &byte) in pixels.iter().enumerate() {
-            for i_width in (0..8).rev() {
-                let bit = (byte >> i_width) & 1;
+    // bits raw hexadecimal values to the screen at the given destination
+    pub fn blit_raw(&mut self, pixels: &[u8], dest: &Point, height: u8) {
+        // calculate the base point: where to draw the sprite
+        // multiply by 4 because there is one byte for the pixel and 3 bytes for the color
+        let mut draw_point = (self.width * 4 * dest.y) + dest.x * 4;
 
-                if bit == 1 && i_height <= height as usize {
-                    let dest = &Point {
-                        x: x + i_width,
-                        y: y + i_height,
-                    };
+        // TODO: create a final pixels array to store the data and then blit all in one shot
+        // let mut final_pixels: Vec<u8> = Vec::new();
 
-                    self.draw_pixel(dest)
+        // loop through the height
+        for i in 0..height {
+            // get the pixel
+            let byte = &pixels[i as usize];
+            for (index, byte_i) in (0..8).rev().enumerate() {
+                let bit = (byte >> byte_i) & 1;
+                // print!("{}", bit);
+                let loc = draw_point + (index * 4);
+                // println!("loc: {}, byte_i: {}", loc, byte_i);
+
+                if bit == 1 {
+                    self.screen[loc] = 0xE2;
+                    self.screen[loc + 1] = 0x1B;
+                    self.screen[loc + 2] = 0x88;
+                    self.screen[loc + 3] = 0xFF;
+                } else {
+                    // TODO: enable this block of code when ready
+                    // if the pixel location contains data already then set it to black
+                    if self.screen[loc] > 0
+                        || self.screen[loc + 1] > 0
+                        || self.screen[loc + 2] > 0
+                        || self.screen[loc + 3] > 0
+                    {
+                        self.screen[loc] = 0x0;
+                        self.screen[loc + 1] = 0x0;
+                        self.screen[loc + 2] = 0x0;
+                        self.screen[loc + 3] = 0x0;
+                    }
                 }
             }
+            println!();
+            draw_point += self.width * 4;
         }
     }
+
+    // pub fn blit_raw(&mut self, pixels: &[u8], x: usize, y: usize, height: u8) {
+    //     for (i_height, &byte) in pixels.iter().enumerate() {
+    //         for i_width in (0..8).rev() {
+    //             let bit = (byte >> i_width) & 1;
+
+    //             if bit == 1 && i_height <= height as usize {
+    //                 let dest = &Point {
+    //                     x: x + i_width,
+    //                     y: y + i_height,
+    //                 };
+
+    //                 self.draw_pixel(dest)
+    //             }
+    //         }
+    //     }
+    // }
 
     /* blits the sprit to the viewport */
     // blit is shorthand for bit block transfer

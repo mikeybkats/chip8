@@ -251,17 +251,23 @@ pub fn execute(
         // DXYN Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels. Each row of 8 pixels is read as bit-coded starting from memory location I; I value does not change after the execution of this instruction. As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen.
         0xD => {
             let height = (instruction & 0xF) as u8;
-            // println!("height: {}", height);
-
             let length = 8 * height as usize;
             let location = *registers.get_i_register() as usize;
             let pixels = &active_memory[location..location + length];
-            let x = vx_value as usize;
-            let y = vy_value as usize;
+            let dest = &Point {
+                x: vx_value as usize,
+                y: vy_value as usize,
+            };
 
-            draw.blit_raw(pixels, x, y, height);
-
-            // println!("location of sprite: {}", location);
+            println!("location of sprite: {}", location);
+            // if location == 554 {
+            // if location == 569 {
+            // if location == 584 {
+            // if location == 599 {
+            // if location == 614 {
+            // if location == 629 {
+            draw.blit_raw(pixels, dest, height);
+            // }
 
             // for (index, &byte) in active_memory.iter().enumerate() {
             //     if index > location - 1 && index < location + length {
