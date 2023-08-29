@@ -10,7 +10,6 @@ use crate::{
     stack::Stack,
 };
 
-// TODO: how does execute get access to all the methods it needs?
 pub fn execute(
     instruction: u16,
     memory: &mut Memory,
@@ -20,7 +19,6 @@ pub fn execute(
     pixels: &mut Pixels,
     width: u32,
     height: u32,
-    // rom: &Vec<u8>,
     key_state: KeyPress,
 ) {
     /*
@@ -50,7 +48,6 @@ pub fn execute(
         // 0 Calls machine code routine at address NNN - not be needed for emulator
         0x0 => {
             // 00E0 - clears screen
-            // println!("instruction 1: {}", instruction);
             match instruction {
                 0x00E0 => {
                     println!("clearing screen");
@@ -71,13 +68,6 @@ pub fn execute(
         0x1 => {
             // 178D
             let nnn = instruction & 0xFFF;
-            // println!("jumping to locaion: {}, {:03X}", nnn, nnn);
-            // println!("nnn as usize: {}", nnn as usize);
-            // println!(
-            //     "memory @0x{:03X}: {:02X}",
-            //     nnn,
-            //     memory.get_memory().get(nnn as usize).unwrap(),
-            // );
             program_counter.jump(nnn);
         }
 
@@ -94,13 +84,13 @@ pub fn execute(
             program_counter.jump(nnn)
         }
 
-        // 3xkk - SE Vx, byte
-        // Skip next instruction if Vx = kk.
+        // 3xnn - SE Vx, byte
+        // Skip next instruction if Vx = nn.
         // The interpreter compares register Vx to kk, and if they are equal, increments the program counter by 2
         0x3 => {
-            let kk = (instruction & 0xFF) as u8;
+            let nn = (instruction & 0xFF) as u8;
             // compares
-            if kk == vx_value {
+            if nn == vx_value {
                 // skip next instruction by incrementing PC by two
                 program_counter.increment();
                 program_counter.increment();
@@ -140,7 +130,9 @@ pub fn execute(
         // 7XNN Adds NN to VX (carry flag is not changed).
         0x7 => {
             let nn = ((instruction as usize) & 0xFF) as u8;
-            registers.set_register(vx_index, nn + vx_value);
+            // let sum = std::cmp::min(nn as u16 + vx_value as u16, 255) as u8;
+            let (sum, _carry) = nn.overflowing_add(vx_value);
+            registers.set_register(vx_index, sum);
         }
 
         0x8 => {
@@ -168,23 +160,23 @@ pub fn execute(
                 4 => {
                     // 8XY4 Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there is not.
                     let (sum, overflow) = vy_value.overflowing_add(vx_value);
-                    registers.set_register(vx_index, sum);
-
                     if overflow {
                         registers.set_register(0xF, 1);
+                    } else {
+                        registers.set_register(0xF, 0);
                     }
+                    registers.set_register(vx_index, sum);
                 }
 
                 5 => {
                     // 8XY5 VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there is not.
                     let (diff, borrow) = vx_value.overflowing_sub(vy_value);
-                    registers.set_register(vx_index, diff);
-
                     if borrow {
                         registers.set_register(0xF, 0);
                     } else {
                         registers.set_register(0xF, 1);
                     }
+                    registers.set_register(vx_index, diff);
                 }
 
                 6 => {
@@ -259,39 +251,7 @@ pub fn execute(
                 y: vy_value as usize,
             };
 
-            println!("location of sprite: {}", location);
-            // if location == 554 {
-            // if location == 569 {
-            // if location == 584 {
-            // if location == 599 {
-            // if location == 614 {
-            // if location == 629 {
             draw.blit_raw(pixels, dest, height);
-            // }
-
-            // for (index, &byte) in active_memory.iter().enumerate() {
-            //     if index > location - 1 && index < location + length {
-            //         print!("{:X}", byte);
-            //     }
-            // }
-            // println!("");
-
-            // let dest = &Point {
-            //     x: vx_value as usize,
-            //     y: vy_value as usize,
-            // };
-            // let sprite = Sprite::new(8, height, &active_memory[location..location + length]);
-
-            // draw.blit_drawable(dest, &sprite);
-
-            // println!("Blit Drawable");
-            // println!("instruction: {:X}, height: {}", instruction, height);
-            // println!("location: {}, length: {}", location, length);
-            // println!("vx: {}, vy: {}", vx_value, vy_value);
-            // println!(
-            //     "pixels {:04X?}",
-            //     &active_memory[location..location + length]
-            // );
         }
 
         0xE => {
@@ -401,9 +361,6 @@ pub fn execute(
     //         None => println!("Value is undefined"),
     //     }
     // }
-
-    // TODO: shouldn't have to call this here. Why do i have to?
-    // calling pixels.render() forces the render
     pixels.render().unwrap();
 }
 
@@ -422,7 +379,7 @@ pub fn fetch(
     //     program_counter.get_pc(),
     //     rom_length
     // );
-    if (program_counter.get_pc() - 512) < rom_length - 1 {
+    if program_counter.get_pc() < rom_length - 1 + 512 {
         let instruction1 = *rom.get(program_counter.get_pc()).unwrap() as u16;
         program_counter.increment();
         let instruction2 = *rom.get(program_counter.get_pc()).unwrap() as u16;
