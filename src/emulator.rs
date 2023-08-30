@@ -55,7 +55,6 @@ pub fn execute(
                 // The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
                 0xEE => {
                     let current_address = stack.pop();
-                    println!("current address: {}", current_address);
                     program_counter.jump(current_address);
                 }
                 _ => (),
@@ -65,8 +64,6 @@ pub fn execute(
         // 1NNN Jumps to address at NNN
         // The interpreter sets the program counter to nnn.
         0x1 => {
-            // 178D
-            println!("jumping");
             let nnn = instruction & 0xFFF;
             program_counter.jump(nnn);
         }
@@ -82,11 +79,6 @@ pub fn execute(
             // set PC to NNN
             let nnn = instruction & 0xFFF;
 
-            // TODO: figure out why the jump is going to a location 0, why is the ram empty?
-            println!(
-                "jumping to: {}, in memory: {}",
-                nnn, active_memory[nnn as usize]
-            );
             program_counter.jump(nnn)
         }
 
@@ -107,7 +99,6 @@ pub fn execute(
         0x4 => {
             // get NN
             let nn = (instruction & 0xFF) as u8;
-            // println!("nn: {:02X}, vx_value: {:02X}", nn, vx_value);
 
             // compares
             if nn != vx_value {
@@ -129,7 +120,6 @@ pub fn execute(
         // 6XNN Sets VX to NN.
         0x6 => {
             let nn = ((instruction as usize) & 0xFF) as u8;
-            // println!("vx index: {:0X}", vx_index);
             registers.set_register(vx_index, nn);
         }
 
@@ -143,7 +133,6 @@ pub fn execute(
 
         0x8 => {
             let instruction_0 = instruction & 0xF;
-            println!("0x8, instruction_0: {}", instruction_0);
             match instruction_0 {
                 0 => {
                     println!("Match: 8XY0");
@@ -170,6 +159,7 @@ pub fn execute(
 
                 4 => {
                     println!("Match: 8XY4");
+                    // TODO: This could be wrong!
                     // 8XY4 Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there is not.
                     let (sum, overflow) = vy_value.overflowing_add(vx_value);
                     if overflow {
@@ -307,7 +297,6 @@ pub fn execute(
         }
 
         0xF => {
-            println!("running F");
             match instruction & 0xFF {
                 // FX07	Sets VX to the value of the delay timer.
                 0x07 => {
@@ -344,21 +333,32 @@ pub fn execute(
                     registers.set_i_register(character_sprite_location as u16);
                 }
                 // FX33	Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
-                0x33 => registers.set_i_register(vx_value as u16),
+                0x33 => { 
+                    let vx_hundreds = vx_value / 100;
+                    let vx_tens = (vx_value / 10) % 10;
+                    let vx_ones = vx_value % 10;
+
+                    let i = *registers.get_i_register() as usize;
+
+                    active_memory[i] = vx_hundreds;
+                    active_memory[i+1] = vx_tens;
+                    active_memory[i+2] = vx_ones;
+                }
+                    ,
                 // FX55	Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.[d]
                 0x55 => {
-                    for (index, hex) in CHAR_SET.iter().enumerate() {
-                        let reg_value = registers.get_register(*hex).unwrap();
+                    for value in 0..vx_index + 1 {
+                        let reg_value = *registers.get_register(value).unwrap();
                         let i = *registers.get_i_register() as usize;
-                        active_memory[i + index] = *reg_value;
+                        active_memory[i + value as usize] = reg_value;
                     }
                 }
                 // FX65	Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified.[d]
                 0x65 => {
-                    for (index, hex) in CHAR_SET.iter().enumerate() {
+                    for hex in 0..vx_index + 1 {
                         let i = *registers.get_i_register() as usize;
-                        let value = active_memory[i + index];
-                        registers.set_register(*hex, value);
+                        let value = active_memory[i + hex as usize];
+                        registers.set_register(hex, value);
                     }
                 }
                 _ => (),
