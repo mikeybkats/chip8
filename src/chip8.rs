@@ -34,16 +34,6 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     memory.set_rom(&rom).unwrap();
     memory.set_fonts();
 
-    // for (index, &byte) in memory.get_memory().iter().enumerate() {
-    //     if index > 510 {
-    //         print!("{:X}", byte);
-    //     }
-    // }
-
-    // ///////
-    // test_print(width, height, screen, &mut memory);
-    // ///////
-
     // main event loop
     event_loop.run(move |event, _, control_flow| {
         let start_time = Instant::now();
@@ -70,7 +60,6 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                     &mut program_counter,
                     &mut pixels,
                     width,
-                    height,
                     key_state,
                 );
             }
@@ -102,7 +91,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
 
                     if virtual_keycode == VirtualKeyCode::C {
                         let screen = pixels.frame_mut();
-                        let mut draw = Draw::new(width, height, screen);
+                        let mut draw = Draw::new(width, screen);
                         draw.clear();
                     }
                 }

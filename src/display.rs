@@ -5,30 +5,6 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-// /**
-//  *  get_screen
-//  *  gets a reference to the viewport pixel array. The event loop watches this array. When data is written to this "screen" the event loop will render the pixels to the window.
-//  * */
-// pub fn get_screen(&self) -> &[u8] {
-//     self.viewport.frame_mut()
-// }
-
-/**
- * get_viewport
- * returns a reference to the viewport "Pixels"
- */
-// pub fn get_viewport(&self) -> Pixels {
-//     self.viewport
-// }
-
-// pub fn get_window(&self) -> &Window {
-//     &self.window
-// }
-
-// pub fn get_event_loop(&self) -> &EventLoop<()> {
-//     &self.event_loop
-// }
-
 /*
  * build_window
  * builds the window for rendering pixels

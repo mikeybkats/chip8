@@ -5,10 +5,7 @@ pub struct ProgramCounter {
 }
 impl ProgramCounter {
     pub fn new() -> ProgramCounter {
-        ProgramCounter {
-            pc: 0,
-            // rom: [0; 3584],
-        }
+        ProgramCounter { pc: 0 }
     }
 
     pub fn set_counter(&mut self, new_counter: u16) {
@@ -36,7 +33,6 @@ mod program_counter_tests {
 
     #[test]
     fn can_create() {
-        // let mut memory = [0 as u8; 1000];
         let pc = ProgramCounter::new();
 
         assert!(pc.get_pc() == 0);
@@ -44,7 +40,6 @@ mod program_counter_tests {
 
     #[test]
     fn can_increment() {
-        // let mut memory = [0 as u8; 1000];
         let mut pc = ProgramCounter::new();
 
         println!("the count is: {}", pc.pc);
@@ -60,14 +55,10 @@ mod program_counter_tests {
 
     #[test]
     fn can_clear() {
-        // let mut memory = [0 as u8; 1000];
         let mut pc = ProgramCounter::new();
 
         pc.increment(); // 1
         pc.increment(); // 2
         assert!(pc.get_pc() == 2);
-
-        // pc.clear(); // 0
-        // assert!(pc.get_pc() == 0);
     }
 }

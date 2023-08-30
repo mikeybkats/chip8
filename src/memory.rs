@@ -62,14 +62,6 @@ impl Memory {
         self.ram[address] = value;
     }
 
-    // pub fn get_stack_memory(&mut self) -> &mut [u8] {
-    //     &mut self.ram[0..512]
-    // }
-
-    // pub fn get_rom_memory(&mut self) -> &mut [u8] {
-    //     &mut self.ram[512..]
-    // }
-
     pub fn get_memory(&mut self) -> &mut [u8] {
         &mut self.ram
     }

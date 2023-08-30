@@ -2,8 +2,8 @@ use pixels::Pixels;
 use winit::event::ScanCode;
 
 use crate::{
-    draw::{Draw, Point, Sprite},
-    font::{Font, CHAR_SET},
+    draw::{Draw, Point},
+    font::CHAR_SET,
     memory::Memory,
     program_counter::ProgramCounter,
     registers::Registers,
@@ -18,7 +18,6 @@ pub fn execute(
     program_counter: &mut ProgramCounter,
     pixels: &mut Pixels,
     width: u32,
-    height: u32,
     key_state: KeyPress,
 ) {
     /*
@@ -34,7 +33,7 @@ pub fn execute(
 
     let screen = pixels.frame_mut();
 
-    let mut draw = Draw::new(width, height, screen);
+    let mut draw = Draw::new(width, screen);
 
     let vy_index = (instruction >> 4 & 0xF) as u8;
     let vy_value = *registers.get_register(vy_index).unwrap();
@@ -44,19 +43,19 @@ pub fn execute(
     let i = *registers.get_i_register();
     let active_memory = memory.get_memory();
 
+    println!("{:04X}", instruction);
     match first_nibble {
         // 0 Calls machine code routine at address NNN - not be needed for emulator
         0x0 => {
-            // 00E0 - clears screen
-            match instruction {
-                0x00E0 => {
-                    println!("clearing screen");
-                    draw.clear()
-                }
-                0x00EE => {
-                    // Return from a subroutine.
-                    // The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
-                    let current_address = stack.current();
+            match instruction & 0xFF {
+                // 00E0 - clears screen
+                0xE0 => draw.clear(),
+                // 00EE
+                // Return from a subroutine.
+                // The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
+                0xEE => {
+                    let current_address = stack.pop();
+                    println!("current address: {}", current_address);
                     program_counter.jump(current_address);
                 }
                 _ => (),
@@ -67,6 +66,7 @@ pub fn execute(
         // The interpreter sets the program counter to nnn.
         0x1 => {
             // 178D
+            println!("jumping");
             let nnn = instruction & 0xFFF;
             program_counter.jump(nnn);
         }
@@ -81,6 +81,12 @@ pub fn execute(
 
             // set PC to NNN
             let nnn = instruction & 0xFFF;
+
+            // TODO: figure out why the jump is going to a location 0, why is the ram empty?
+            println!(
+                "jumping to: {}, in memory: {}",
+                nnn, active_memory[nnn as usize]
+            );
             program_counter.jump(nnn)
         }
 
@@ -101,7 +107,7 @@ pub fn execute(
         0x4 => {
             // get NN
             let nn = (instruction & 0xFF) as u8;
-            println!("nn: {:02X}, vx_value: {:02X}", nn, vx_value);
+            // println!("nn: {:02X}, vx_value: {:02X}", nn, vx_value);
 
             // compares
             if nn != vx_value {
@@ -123,7 +129,7 @@ pub fn execute(
         // 6XNN Sets VX to NN.
         0x6 => {
             let nn = ((instruction as usize) & 0xFF) as u8;
-            println!("vx index: {:0X}", vx_index);
+            // println!("vx index: {:0X}", vx_index);
             registers.set_register(vx_index, nn);
         }
 
@@ -137,27 +143,33 @@ pub fn execute(
 
         0x8 => {
             let instruction_0 = instruction & 0xF;
+            println!("0x8, instruction_0: {}", instruction_0);
             match instruction_0 {
                 0 => {
+                    println!("Match: 8XY0");
                     // 8XY0 Sets VX to the value of VY.
                     registers.set_register(vx_index, vy_value);
                 }
                 1 => {
+                    println!("Match: 8XY1");
                     // 8XY1 Sets VX to VX or VY. (bitwise OR operation)
                     registers.set_register(vx_index, vx_value | vy_value);
                 }
 
                 2 => {
+                    println!("Match: 8XY2");
                     // 8XY2 Sets VX to VX and VY. (bitwise AND operation)
                     registers.set_register(vx_index, vx_value & vy_value);
                 }
 
                 3 => {
+                    println!("Match: 8XY3");
                     // 8XY3 Sets VX to VX xor VY.
                     registers.set_register(vx_index, vx_value ^ vy_value);
                 }
 
                 4 => {
+                    println!("Match: 8XY4");
                     // 8XY4 Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there is not.
                     let (sum, overflow) = vy_value.overflowing_add(vx_value);
                     if overflow {
@@ -224,8 +236,9 @@ pub fn execute(
 
         // BNNN Jumps to the address NNN plus V0.
         0xB => {
+            println!("jumping BNNN");
             let nnn = instruction & 0xFFF;
-            stack.jump_to_address(nnn as usize);
+            program_counter.jump(nnn + *registers.get_register(0).unwrap() as u16);
         }
 
         // CXNN Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
@@ -233,10 +246,10 @@ pub fn execute(
             let nn = (instruction & 0xFF) as u8;
             let random_number = rand::random::<u8>();
             let x = random_number & nn;
-            println!(
-                "nn: {:02X}, random: {:02X}, vx: {:02X}",
-                nn, random_number, x
-            );
+            // println!(
+            //     "nn: {:02X}, random: {:02X}, vx: {:02X}",
+            //     nn, random_number, x
+            // );
             registers.set_register(vx_index, x);
         }
 
@@ -250,6 +263,8 @@ pub fn execute(
                 x: vx_value as usize,
                 y: vy_value as usize,
             };
+            // TODO: verify this needs done
+            registers.set_register(0xF, 0);
 
             draw.blit_raw(pixels, dest, height);
         }
@@ -292,6 +307,7 @@ pub fn execute(
         }
 
         0xF => {
+            println!("running F");
             match instruction & 0xFF {
                 // FX07	Sets VX to the value of the delay timer.
                 0x07 => {
@@ -302,7 +318,7 @@ pub fn execute(
                     if *key_state.key_pressed {
                         match key_state.current_key {
                             Some(value) => {
-                                println!("key scancode: {}", value);
+                                // println!("key scancode: {}", value);
                                 registers.set_register(vx_index, value as u8);
                                 *key_state.key_pressed = false;
                             }
@@ -374,11 +390,6 @@ pub fn fetch(
     program_counter: &mut ProgramCounter,
     rom_length: usize,
 ) -> Option<u16> {
-    // println!(
-    //     "program counter: {}, rom length: {}",
-    //     program_counter.get_pc(),
-    //     rom_length
-    // );
     if program_counter.get_pc() < rom_length - 1 + 512 {
         let instruction1 = *rom.get(program_counter.get_pc()).unwrap() as u16;
         program_counter.increment();
@@ -406,44 +417,6 @@ pub fn fetch_instruction(
         }
         _ => 0x0,
     }
-}
-
-/** Prints a font ramp and pixels to demonstrate the edge of the four screen corners */
-pub fn _test_print(width: u32, height: u32, screen: &mut [u8], memory: &mut Memory) {
-    let mut draw = Draw::new(width, height, screen);
-
-    draw.draw_pixel(&Point { x: 0, y: 0 });
-    draw.draw_pixel(&Point { x: 63, y: 0 });
-    draw.draw_pixel(&Point { x: 0, y: 31 });
-    draw.draw_pixel(&Point { x: 63, y: 31 });
-
-    let font = Font::_new();
-    assert_eq!(
-        font.get_character(&0x1).unwrap().clone(),
-        [0x20, 0x60, 0x20, 0x20, 0x70]
-    );
-
-    let mut count = 0;
-    let mut y = 3;
-    for character in CHAR_SET {
-        let mut x = 2 + (count * 5);
-        if count == 10 {
-            count = 0;
-            x = 2 + count * 5;
-            y = 10;
-        }
-        draw.blit_drawable(&Point { x, y }, font.get_font_sprite(&character).unwrap());
-        count += 1;
-    }
-
-    // This lower portion tests the retrieval of fonts from chip8 memory. this is how it will work in the application when executing instructions.
-    let active_memory = memory.get_memory();
-    let zero = Font::convert_font_to_sprite(&active_memory[0..5]);
-    let zero_sprite = Sprite::new(8, 5, &zero);
-    let f = Font::convert_font_to_sprite(&active_memory[75..80]);
-    let f_sprite = Sprite::new(8, 5, &f);
-    draw.blit_drawable(&Point { x: 20, y: 22 }, &zero_sprite);
-    draw.blit_drawable(&Point { x: 28, y: 27 }, &f_sprite);
 }
 
 #[derive(Debug)]

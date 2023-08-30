@@ -8,7 +8,6 @@ use std::{
 use crate::chip8::chip8;
 
 mod chip8;
-// mod sound_timer;
 mod display;
 mod draw;
 mod emulator;
