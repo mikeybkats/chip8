@@ -54,17 +54,20 @@ impl Draw<'_> {
                     self.screen[loc + 3] = 0xFF;
                 } else {
                     // TODO: enable this block of code when ready
+                    // there is the posibility of overflow which needs to be fixed
                     // if the pixel location contains data already then set it to black
-                    if self.screen[loc] > 0
-                        || self.screen[loc + 1] > 0
-                        || self.screen[loc + 2] > 0
-                        || self.screen[loc + 3] > 0
-                    {
-                        self.screen[loc] = 0x0;
-                        self.screen[loc + 1] = 0x0;
-                        self.screen[loc + 2] = 0x0;
-                        self.screen[loc + 3] = 0x0;
-                    }
+
+                    // if (loc + 3) < self.screen.len()
+                    //     && (self.screen[loc] > 0
+                    //         || self.screen[loc + 1] > 0
+                    //         || self.screen[loc + 2] > 0
+                    //         || self.screen[loc + 3] > 0)
+                    // {
+                    //     self.screen[loc] = 0x0;
+                    //     self.screen[loc + 1] = 0x0;
+                    //     self.screen[loc + 2] = 0x0;
+                    //     self.screen[loc + 3] = 0x0;
+                    // }
                 }
             }
             draw_point += self.width * 4;

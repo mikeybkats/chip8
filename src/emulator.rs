@@ -3,7 +3,6 @@ use winit::event::ScanCode;
 
 use crate::{
     draw::{Draw, Point},
-    font::CHAR_SET,
     memory::Memory,
     program_counter::ProgramCounter,
     registers::Registers,
@@ -43,7 +42,6 @@ pub fn execute(
     let i = *registers.get_i_register();
     let active_memory = memory.get_memory();
 
-    println!("{:04X}", instruction);
     match first_nibble {
         // 0 Calls machine code routine at address NNN - not be needed for emulator
         0x0 => {
@@ -126,7 +124,6 @@ pub fn execute(
         // 7XNN Adds NN to VX (carry flag is not changed).
         0x7 => {
             let nn = ((instruction as usize) & 0xFF) as u8;
-            // let sum = std::cmp::min(nn as u16 + vx_value as u16, 255) as u8;
             let (sum, _carry) = nn.overflowing_add(vx_value);
             registers.set_register(vx_index, sum);
         }
@@ -134,61 +131,58 @@ pub fn execute(
         0x8 => {
             let instruction_0 = instruction & 0xF;
             match instruction_0 {
-                0 => {
-                    println!("Match: 8XY0");
+                0x0 => {
                     // 8XY0 Sets VX to the value of VY.
                     registers.set_register(vx_index, vy_value);
                 }
-                1 => {
-                    println!("Match: 8XY1");
+                0x1 => {
                     // 8XY1 Sets VX to VX or VY. (bitwise OR operation)
                     registers.set_register(vx_index, vx_value | vy_value);
                 }
 
-                2 => {
-                    println!("Match: 8XY2");
+                0x2 => {
                     // 8XY2 Sets VX to VX and VY. (bitwise AND operation)
                     registers.set_register(vx_index, vx_value & vy_value);
                 }
 
-                3 => {
-                    println!("Match: 8XY3");
+                0x3 => {
                     // 8XY3 Sets VX to VX xor VY.
                     registers.set_register(vx_index, vx_value ^ vy_value);
                 }
 
-                4 => {
-                    println!("Match: 8XY4");
-                    // TODO: This could be wrong!
+                0x4 => {
                     // 8XY4 Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there is not.
+                    // fourth checkmark: if vF can be used as the vX input  
                     let (sum, overflow) = vy_value.overflowing_add(vx_value);
+                    registers.set_register(vx_index, sum);
+
                     if overflow {
                         registers.set_register(0xF, 1);
                     } else {
                         registers.set_register(0xF, 0);
                     }
-                    registers.set_register(vx_index, sum);
                 }
 
-                5 => {
+                0x5 => {
                     // 8XY5 VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there is not.
                     let (diff, borrow) = vx_value.overflowing_sub(vy_value);
+                    registers.set_register(vx_index, diff);
+                    
                     if borrow {
                         registers.set_register(0xF, 0);
                     } else {
                         registers.set_register(0xF, 1);
                     }
-                    registers.set_register(vx_index, diff);
                 }
 
-                6 => {
+                0x6 => {
                     // 8XY6 Stores the least significant bit of VX in VF and then shifts VX to the right by 1.
-                    let vx_lsb = vx_value & 1;
-                    registers.set_register(0xF, vx_lsb);
+                    // failing on check if vF can be used as the vY input 
                     registers.set_register(vx_index, vx_value >> 1);
+                    registers.set_register(0xF, vx_value & 1);
                 }
 
-                7 => {
+                0x7 => {
                     // 8XY7 Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there is not
                     let (diff, borrow) = vy_value.overflowing_sub(vx_value);
                     registers.set_register(vx_index, diff);
@@ -200,11 +194,10 @@ pub fn execute(
                     }
                 }
 
-                8 => {
+                0xE => {
                     // 8XYE	Stores the most significant bit of VX in VF and then shifts VX to the left by 1
-                    let vx_msb = (vx_value >> 7) & 1;
-                    registers.set_register(0xF, vx_msb);
                     registers.set_register(vx_index, vx_value << 1);
+                    registers.set_register(0xF, vx_value >> 7 & 1); 
                 }
                 _ => (),
             }
@@ -226,7 +219,6 @@ pub fn execute(
 
         // BNNN Jumps to the address NNN plus V0.
         0xB => {
-            println!("jumping BNNN");
             let nnn = instruction & 0xFFF;
             program_counter.jump(nnn + *registers.get_register(0).unwrap() as u16);
         }
@@ -236,10 +228,6 @@ pub fn execute(
             let nn = (instruction & 0xFF) as u8;
             let random_number = rand::random::<u8>();
             let x = random_number & nn;
-            // println!(
-            //     "nn: {:02X}, random: {:02X}, vx: {:02X}",
-            //     nn, random_number, x
-            // );
             registers.set_register(vx_index, x);
         }
 
@@ -410,9 +398,7 @@ pub fn fetch_instruction(
     rom_length: usize,
 ) -> u16 {
     match fetch(memory, program_counter, rom_length) {
-        // :04X specifies a width of 4 with leading zeros
         Some(instruction) => {
-            // println!("instruction: {:04X}", instruction);
             instruction
         }
         _ => 0x0,

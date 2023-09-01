@@ -1,13 +1,12 @@
 use std::time::{Duration, Instant};
 
 use winit::{
-    event::{ElementState, Event, KeyboardInput, ScanCode, VirtualKeyCode, WindowEvent},
+    event::{ElementState, Event, KeyboardInput, ScanCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
 };
 
 use crate::{
     display::{build_pixels, build_window},
-    draw::Draw,
     emulator::{execute, fetch_instruction, KeyPress},
     memory::Memory,
     program_counter::ProgramCounter,
@@ -79,7 +78,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                     input:
                         KeyboardInput {
                             state: ElementState::Pressed,
-                            virtual_keycode: Some(virtual_keycode),
+                            virtual_keycode: Some(_virtual_keycode),
                             scancode: key_scancode,
                             ..
                         },
@@ -89,11 +88,11 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                     // println!("scancode loop: {:?}", current_key);
                     key_pressed = true;
 
-                    if virtual_keycode == VirtualKeyCode::C {
-                        let screen = pixels.frame_mut();
-                        let mut draw = Draw::new(width, screen);
-                        draw.clear();
-                    }
+                    // if virtual_keycode == VirtualKeyCode::C {
+                    //     let screen = pixels.frame_mut();
+                    //     let mut draw = Draw::new(width, screen);
+                    //     draw.clear();
+                    // }
                 }
                 _ => {}
             },
