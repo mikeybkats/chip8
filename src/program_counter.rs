@@ -17,6 +17,11 @@ impl ProgramCounter {
         self.pc
     }
 
+    pub fn decrement(&mut self) -> u16 {
+        self.pc -= 1;
+        self.pc
+    }
+
     pub fn jump(&mut self, location: u16) {
         self.pc = location;
     }

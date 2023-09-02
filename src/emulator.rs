@@ -42,12 +42,17 @@ pub fn execute(
     let i = *registers.get_i_register();
     let active_memory = memory.get_memory();
 
+    let mut render = false;
+
     match first_nibble {
         // 0 Calls machine code routine at address NNN - not be needed for emulator
         0x0 => {
             match instruction & 0xFF {
                 // 00E0 - clears screen
-                0xE0 => draw.clear(),
+                0xE0 => {
+                    draw.clear();
+                    render = true
+                },
                 // 00EE
                 // Return from a subroutine.
                 // The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
@@ -241,21 +246,24 @@ pub fn execute(
                 x: vx_value as usize,
                 y: vy_value as usize,
             };
-            // TODO: verify this needs done
             registers.set_register(0xF, 0);
 
             draw.blit_raw(pixels, dest, height);
+
+            render = true;
+
         }
 
         0xE => {
-            let stored_key = vx_value;
+            // let stored_key = vx_value;
             match instruction & 0xFF {
                 // EX9E Skips the next instruction if the key stored in VX is pressed (usually the next instruction is a jump to skip a code block).
                 0x9E => {
                     if *key_state.key_pressed {
                         match key_state.current_key {
                             Some(value) => {
-                                if value as u8 == stored_key {
+                                println!("EX9E, current_key: {}, vx: {}", value, vx_value);
+                                if value as u8 == vx_value {
                                     program_counter.increment();
                                     program_counter.increment();
                                     *key_state.key_pressed = false;
@@ -270,14 +278,18 @@ pub fn execute(
                     if *key_state.key_pressed {
                         match key_state.current_key {
                             Some(value) => {
-                                println!("keypress value: {}", value);
-                                if value as u8 != stored_key {
+                                println!("EXA1, current_key: {}, vx: {}", value, vx_value);
+                                if value as u8 != vx_value {
                                     program_counter.increment();
                                     program_counter.increment();
                                     *key_state.key_pressed = false;
                                 }
                             }
-                            None => {}
+                            None => {
+                                    program_counter.increment();
+                                    program_counter.increment();
+                                    *key_state.key_pressed = false;
+                            }
                         }
                     }
                 }
@@ -289,23 +301,28 @@ pub fn execute(
             match instruction & 0xFF {
                 // FX07	Sets VX to the value of the delay timer.
                 0x07 => {
+                    println!("Delay timer value: {}", dt);
                     registers.set_register(vx_index, dt);
                 }
                 // FX0A	A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event).
                 0x0A => {
+                    println!("FX0A: Get key");
                     if *key_state.key_pressed {
                         match key_state.current_key {
                             Some(value) => {
-                                // println!("key scancode: {}", value);
+                                println!("Saving key: {}", value);
                                 registers.set_register(vx_index, value as u8);
                                 *key_state.key_pressed = false;
                             }
                             None => println!("Value is undefined"),
                         }
+                    } else {
+                        program_counter.decrement();
                     }
                 }
                 // FX15	Sets the delay timer to VX.
                 0x15 => {
+                    println!("FX15 - setting delay timer: {}", vx_value);
                     registers.set_delay_timer(vx_value);
                 }
                 // FX18	Sets the sound timer to VX.
@@ -356,17 +373,9 @@ pub fn execute(
         _ => (),
     }
 
-    // test key press scancode
-    // if *key_state.key_pressed {
-    //     match key_state.current_key {
-    //         Some(value) => {
-    //             println!("key scancode: {}", value);
-    //             *key_state.key_pressed = false;
-    //         }
-    //         None => println!("Value is undefined"),
-    //     }
-    // }
-    pixels.render().unwrap();
+    if render {
+        pixels.render().unwrap();
+    }
 }
 
 pub fn _decode(_command: bool) -> bool {
@@ -403,6 +412,78 @@ pub fn fetch_instruction(
             instruction
         }
         _ => 0x0,
+    }
+}
+
+pub fn match_key(key_scancode: u32) -> Option<u32>{
+    match key_scancode {
+        // Key 1 - 18: 0x1
+        18 => {
+            Some(0x1)
+        }
+        // Key 2 - 19: 0x2
+        19 => {
+            Some(0x2)
+        }
+        // Key 3 - 20: 0x3
+        20 => {
+            Some(0x3)
+        }
+        // Key 4 - 21: 0xC
+        21 => {
+            Some(0xC)
+        }
+        // Key Q - 12: 0x4
+        12 => {
+            Some(0x4)
+        }
+        // Key W - 13: 0x5
+        13 => {
+            Some(0x5)
+        }
+        // Key E - 14: 0x6
+        14 => {
+            Some(0x6)
+        }
+        // Key R - 15: 0xD
+        15 => {
+            Some(0xD)
+        }
+        // Key A - 0:  0x7
+        0 => {
+            Some(0x7)
+        }
+        // Key S - 1:  0x8
+        1 => {
+            Some(0x8)
+        }
+        // Key D - 2:  0x9
+        2 => {
+            Some(0x9)
+        }
+        // Key F - 3:  0xE
+        3 => {
+            Some(0xE)
+        }
+        // Key Z - 6:  0xA
+        6 => {
+            Some(0xA)
+        }
+        // Key X - 7:  0x0
+        7 => {
+            Some(0x0)
+        }
+        // Key C - 8:  0xB
+        8 => {
+            Some(0xB)
+        }
+        // Key V - 9:  0xF
+        9 => {
+            Some(0xF)
+        }
+        _ => {
+            None
+        }
     }
 }
 
