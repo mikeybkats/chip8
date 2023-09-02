@@ -270,6 +270,7 @@ pub fn execute(
                     if *key_state.key_pressed {
                         match key_state.current_key {
                             Some(value) => {
+                                println!("keypress value: {}", value);
                                 if value as u8 != stored_key {
                                     program_counter.increment();
                                     program_counter.increment();
