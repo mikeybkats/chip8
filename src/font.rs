@@ -1,29 +1,5 @@
 use std::collections::HashMap;
 
-use crate::draw::Drawable;
-
-#[derive(Debug)]
-pub struct FontSprite {
-    pub character: u8,
-    width: usize,
-    height: usize,
-    pixels: Vec<u8>,
-}
-
-impl Drawable for FontSprite {
-    fn width(&self) -> usize {
-        self.width
-    }
-
-    fn height(&self) -> usize {
-        self.height
-    }
-
-    fn pixels(&self) -> &[u8] {
-        &self.pixels
-    }
-}
-
 pub const CHAR_SET: [u8; 16] = [
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF,
 ];

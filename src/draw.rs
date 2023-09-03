@@ -3,20 +3,35 @@
 pub struct Draw<'a> {
     width: usize,
     screen: &'a mut [u8],
+    // sprites: Vec<u16>,
 }
 impl Draw<'_> {
     pub fn new(width: u32, screen: &mut [u8]) -> Draw {
         Draw {
             width: width as usize,
             screen,
+            // sprites: Vec::new(),
         }
     }
 
+    // pub fn register_sprite(&mut self, location: u16) {
+    //     if !self.sprites.contains(&location) {
+    //         self.sprites.push(location);
+    //     }
+    // }
+
+    // pub fn get_sprites(self) -> Vec<u16> {
+    //     self.sprites
+    // }
+
     // bits raw hexadecimal values to the screen at the given destination
-    pub fn blit_raw(&mut self, pixels: &[u8], dest: &Point, height: u8) {
+    pub fn blit_raw(&mut self, pixels: &[u8], dest: &Point, height: u8) -> bool {
         // calculate the base point: where to draw the sprite
         // multiply by 4 because there is one byte for the pixel and 3 bytes for the color
         let mut draw_point = (self.width * 4 * dest.y) + dest.x * 4;
+
+        // if any pixels are turned off, set the flag register
+        let mut set_flag_register = false;
 
         // TODO: create a final pixels array to store the data and then blit all in one shot
         // let mut final_pixels: Vec<u8> = Vec::new();
@@ -27,35 +42,33 @@ impl Draw<'_> {
             let byte = &pixels[i as usize];
             for (index, byte_i) in (0..8).rev().enumerate() {
                 let bit = (byte >> byte_i) & 1;
-                // print!("{}", bit);
                 let loc = draw_point + (index * 4);
-                // println!("loc: {}, byte_i: {}", loc, byte_i);
 
-                if bit == 1 {
-                    self.screen[loc] = 0xE2;
-                    self.screen[loc + 1] = 0x1B;
-                    self.screen[loc + 2] = 0x88;
-                    self.screen[loc + 3] = 0xFF;
-                } else {
-                    // TODO: enable this block of code when ready
-                    // there is the posibility of overflow which needs to be fixed
-                    // if the pixel location contains data already then set it to black
-
-                    if (loc + 3) < self.screen.len()
-                        && (self.screen[loc] > 0
-                            || self.screen[loc + 1] > 0
-                            || self.screen[loc + 2] > 0
-                            || self.screen[loc + 3] > 0)
+                if bit == 1 && (loc < self.screen.len()) {
+                    // if data already exists flip the bit to
+                    if self.screen[loc] > 0x0
+                        && self.screen[loc + 1] > 0x0
+                        && self.screen[loc + 2] > 0x0
+                        && self.screen[loc + 3] > 0x0
                     {
                         self.screen[loc] = 0x0;
                         self.screen[loc + 1] = 0x0;
                         self.screen[loc + 2] = 0x0;
                         self.screen[loc + 3] = 0x0;
+
+                        set_flag_register = true;
+                    } else {
+                        self.screen[loc] = 0xE2;
+                        self.screen[loc + 1] = 0x1B;
+                        self.screen[loc + 2] = 0x88;
+                        self.screen[loc + 3] = 0xFF;
                     }
                 }
             }
             draw_point += self.width * 4;
         }
+
+        set_flag_register
     }
 
     /* clears the screen */

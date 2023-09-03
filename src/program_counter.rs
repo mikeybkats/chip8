@@ -12,6 +12,11 @@ impl ProgramCounter {
         self.pc = new_counter
     }
 
+    pub fn increment_by(&mut self, value: u16) -> u16 {
+        self.pc += value;
+        self.pc
+    }
+
     pub fn increment(&mut self) -> u16 {
         self.pc += 1;
         self.pc

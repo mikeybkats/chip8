@@ -19,6 +19,7 @@ pub fn execute(
     width: u32,
     key_state: KeyPress,
 ) {
+    // println!("{:04X}", instruction);
     /*
      * NNN: address
      * NN: 8-bit constant
@@ -93,8 +94,7 @@ pub fn execute(
             // compares
             if nn == vx_value {
                 // skip next instruction by incrementing PC by two
-                program_counter.increment();
-                program_counter.increment();
+                program_counter.increment_by(2);
             }
         }
 
@@ -106,8 +106,7 @@ pub fn execute(
             // compares
             if nn != vx_value {
                 // skip next instruction by incrementing PC by two
-                program_counter.increment();
-                program_counter.increment();
+                program_counter.increment_by(2);
             }
         }
 
@@ -115,8 +114,7 @@ pub fn execute(
         // The interpreter compares register Vx to register Vy, and if they are equal, increments the program counter by 2.
         0x5 => {
             if vx_value == vy_value {
-                program_counter.increment();
-                program_counter.increment();
+                program_counter.increment_by(2);
             }
         }
 
@@ -130,7 +128,11 @@ pub fn execute(
         0x7 => {
             let nn = ((instruction as usize) & 0xFF) as u8;
             let (sum, _carry) = nn.overflowing_add(vx_value);
-            registers.set_register(vx_index, sum);
+            // if carry {
+            //     registers.set_register(vx_index, 255);
+            // } else {
+                registers.set_register(vx_index, sum);
+            // }
         }
 
         0x8 => {
@@ -211,8 +213,7 @@ pub fn execute(
         // 9XY0 Skips the next instruction if VX does not equal VY. (Usually the next instruction is a jump to skip a code block);
         0x9 => {
             if vx_value != vy_value {
-                program_counter.increment();
-                program_counter.increment();
+                program_counter.increment_by(2);
             }
         }
 
@@ -240,15 +241,22 @@ pub fn execute(
         0xD => {
             let height = (instruction & 0xF) as u8;
             let length = 8 * height as usize;
-            let location = *registers.get_i_register() as usize;
+            let location_u16 = *registers.get_i_register();
+            let location = location_u16 as usize;
             let pixels = &active_memory[location..location + length];
             let dest = &Point {
-                x: vx_value as usize,
-                y: vy_value as usize,
+                x: (vx_value & 63) as usize,
+                y: (vy_value & 31) as usize,
             };
             registers.set_register(0xF, 0);
 
-            draw.blit_raw(pixels, dest, height);
+            let set_flag_register = draw.blit_raw(pixels, dest, height);
+
+            if set_flag_register {
+                registers.set_register(0xF, 1);
+            } else {
+                registers.set_register(0xF, 0);
+            }
 
             render = true;
 
@@ -260,12 +268,12 @@ pub fn execute(
                 // EX9E Skips the next instruction if the key stored in VX is pressed (usually the next instruction is a jump to skip a code block).
                 0x9E => {
                     if *key_state.key_pressed {
+                        println!("key pressed:");
                         match key_state.current_key {
                             Some(value) => {
-                                println!("EX9E, current_key: {}, vx: {}", value, vx_value);
                                 if value as u8 == vx_value {
-                                    program_counter.increment();
-                                    program_counter.increment();
+                                    println!("EX9E, current_key: {}, vx: {}", value, vx_value);
+                                    program_counter.increment_by(2);
                                     *key_state.key_pressed = false;
                                 }
                             }
@@ -275,21 +283,20 @@ pub fn execute(
                 }
                 // EXA1 Skips the next instruction if the key stored in VX is not pressed (usually the next instruction is a jump to skip a code block).
                 0xA1 => {
-                    if *key_state.key_pressed {
-                        match key_state.current_key {
-                            Some(value) => {
-                                println!("EXA1, current_key: {}, vx: {}", value, vx_value);
-                                if value as u8 != vx_value {
-                                    program_counter.increment();
-                                    program_counter.increment();
-                                    *key_state.key_pressed = false;
-                                }
+                    println!("{:04X}", instruction);
+                    match key_state.current_key {
+                        Some(value) => {
+                            println!("EXA1, current_key: {}, vx: {}", value, vx_value);
+                            if value as u8 != vx_value {
+                                println!("skipping next instruction.");
+                                program_counter.increment_by(2);
+                                *key_state.key_pressed = false;
                             }
-                            None => {
-                                    program_counter.increment();
-                                    program_counter.increment();
-                                    *key_state.key_pressed = false;
-                            }
+                        }
+                        None => {
+                            println!("no key");
+                            program_counter.increment_by(2);
+                            *key_state.key_pressed = false;
                         }
                     }
                 }
@@ -307,6 +314,9 @@ pub fn execute(
                 // FX0A	A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event).
                 0x0A => {
                     println!("FX0A: Get key");
+                    println!("Decrementing");
+                    program_counter.decrement();
+
                     if *key_state.key_pressed {
                         match key_state.current_key {
                             Some(value) => {
@@ -316,9 +326,7 @@ pub fn execute(
                             }
                             None => println!("Value is undefined"),
                         }
-                    } else {
-                        program_counter.decrement();
-                    }
+                    } 
                 }
                 // FX15	Sets the delay timer to VX.
                 0x15 => {
