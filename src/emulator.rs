@@ -17,9 +17,9 @@ pub fn execute(
     program_counter: &mut ProgramCounter,
     pixels: &mut Pixels,
     width: u32,
-    key_state: &mut KeyPress,
+    key_state: KeyPress,
 ) {
-    // println!("{:04X}", instruction);
+    println!("{:04X}", instruction);
     /*
      * NNN: address
      * NN: 8-bit constant
@@ -270,15 +270,11 @@ pub fn execute(
                     println!("{:04X}, vx register: {}", instruction, vx_value);
                     match key_state.current_key {
                         Some(value) => {
-                            if *value as u8 == vx_value {
+                            if value as u8 == vx_value {
                                 program_counter.increment_by(2);
-                                *key_state.key_pressed = false;
-                                *key_state.current_key = None;
                             }
                         }
                         None => {
-                                *key_state.key_pressed = false;
-                                *key_state.current_key = None;
                         }
                     }
                 }
@@ -287,20 +283,16 @@ pub fn execute(
                     match key_state.current_key {
                         Some(value) => {
                             println!("{:04X}, vx register: {}, key pressed: {}, current key: {}", instruction, vx_value, key_state.key_pressed, value);
-                            if *value as u8 != vx_value {
+                            if value as u8 != vx_value {
                                 println!("skipping next instruction.");
                                 program_counter.increment_by(2);
                             }
-                            *key_state.key_pressed = false;
-                            *key_state.current_key = None;
 
                         }
                         None => {
                             println!("{:04X}, vx register: {}, key pressed: {}, current key: None", instruction, vx_value, key_state.key_pressed);
                             println!("no key, skipping next instruction");
                             program_counter.increment_by(2);
-                            *key_state.key_pressed = false;
-                            *key_state.current_key = None;
                         }
                     }
                 }
@@ -318,21 +310,21 @@ pub fn execute(
                 // FX0A	A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event).
                 0x0A => {
                     println!("FX0A: Get key");
-                    println!("Decrementing");
-                    program_counter.decrement();
 
-                    match key_state.current_key {
-                        Some(value) => {
-                            println!("Saving key: {}", value);
-                            registers.set_register(vx_index, *value as u8);
-                            *key_state.key_pressed = false;
-                            *key_state.current_key = None;
+                    // NOT RELEASED - Your implementation doesn't wait for the pressed key to be released before resuming
+                    if key_state.key_pressed {
+                        match key_state.current_key {
+                            Some(value) => {
+                                println!("Saving key: {}", value);
+                                registers.set_register(vx_index, value as u8);
+                            }
+                            None => {
+                                println!("Value is undefined");
+                            },
                         }
-                        None => {
-                            println!("Value is undefined");
-                            *key_state.key_pressed = false;
-                            *key_state.current_key = None;
-                        },
+                    } else {
+                        program_counter.decrement();
+                        program_counter.decrement();
                     }
                 }
                 // FX15	Sets the delay timer to VX.
@@ -503,7 +495,7 @@ pub fn match_key(key_scancode: u32) -> Option<u32>{
 }
 
 #[derive(Debug)]
-pub struct KeyPress<'a> {
-    pub current_key: &'a mut Option<ScanCode>,
-    pub key_pressed: &'a mut bool,
+pub struct KeyPress {
+    pub current_key: Option<ScanCode>,
+    pub key_pressed: bool,
 }

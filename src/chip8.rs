@@ -26,12 +26,14 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     let mut stack = Stack::new();
     let mut program_counter = ProgramCounter::new();
     program_counter.set_counter(512);
+
     let mut registers = Registers::new();
-    let mut current_key: Option<ScanCode> = None;
-    let mut key_pressed: bool = false;
     let mut memory = Memory::new();
     memory.set_rom(&rom).unwrap();
     memory.set_fonts();
+
+    let mut current_key: Option<ScanCode> = None;
+    let mut key_pressed: bool = false;
 
     // main event loop
     event_loop.run(move |event, _, control_flow| {
@@ -46,11 +48,10 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                 let instruction =
                     fetch_instruction(memory.get_memory(), &mut program_counter, rom_length);
 
-                let mut key_state = KeyPress {
-                    current_key: &mut current_key,
-                    key_pressed: &mut key_pressed,
+                let key_state = KeyPress {
+                    current_key,
+                    key_pressed,
                 };
-
                 execute(
                     instruction,
                     &mut memory,
@@ -59,7 +60,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                     &mut program_counter,
                     &mut pixels,
                     width,
-                    &mut key_state,
+                    key_state,
                 );
             }
             Event::WindowEvent {
@@ -86,6 +87,18 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                 } => {
                     current_key = match_key(key_scancode);
                     key_pressed = true;
+                }
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            state: ElementState::Released,
+                            virtual_keycode: Some(_key),
+                            ..
+                        },
+                    ..
+                } => {
+                    current_key = None;
+                    key_pressed = false;
                 }
                 _ => {}
             },
