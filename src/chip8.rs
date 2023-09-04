@@ -46,8 +46,8 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                 let instruction =
                     fetch_instruction(memory.get_memory(), &mut program_counter, rom_length);
 
-                let key_state = KeyPress {
-                    current_key,
+                let mut key_state = KeyPress {
+                    current_key: &mut current_key,
                     key_pressed: &mut key_pressed,
                 };
 
@@ -59,7 +59,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                     &mut program_counter,
                     &mut pixels,
                     width,
-                    key_state,
+                    &mut key_state,
                 );
             }
             Event::WindowEvent {
