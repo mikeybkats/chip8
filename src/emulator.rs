@@ -19,6 +19,7 @@ pub fn execute(
     width: u32,
     key_state: KeyPress,
 ) {
+    // println!("{:04X}", instruction);
     /*
      * NNN: address
      * NN: 8-bit constant
@@ -422,17 +423,7 @@ pub fn fetch_instruction(
 ) -> u16 {
     match fetch(memory, program_counter, rom_length) {
         Some(instruction) => {
-    if program_counter.get_pc() < rom_length - 1 + 512 {
-        let instruction1 = *rom.get(program_counter.get_pc()).unwrap() as u16;
-        program_counter.increment();
-        let instruction2 = *rom.get(program_counter.get_pc()).unwrap() as u16;
-        program_counter.increment();
-
-        let instruction: u16 = (instruction1 << 8) | instruction2;
-        Some(instruction)
-    } else {
-        None
-    }
+            instruction
         }
         _ => 0x0,
     }
