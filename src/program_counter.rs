@@ -1,7 +1,6 @@
 // A program counter, often called just “PC”, which points at the current instruction in memory
 pub struct ProgramCounter {
     pc: u16,
-    // rom: [u8; 3584],
 }
 impl ProgramCounter {
     pub fn new() -> ProgramCounter {

@@ -10,19 +10,8 @@ impl Draw<'_> {
         Draw {
             width: width as usize,
             screen,
-            // sprites: Vec::new(),
         }
     }
-
-    // pub fn register_sprite(&mut self, location: u16) {
-    //     if !self.sprites.contains(&location) {
-    //         self.sprites.push(location);
-    //     }
-    // }
-
-    // pub fn get_sprites(self) -> Vec<u16> {
-    //     self.sprites
-    // }
 
     // bits raw hexadecimal values to the screen at the given destination
     pub fn blit_raw(&mut self, pixels: &[u8], dest: &Point, height: u8) -> bool {
