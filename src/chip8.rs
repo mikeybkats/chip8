@@ -33,7 +33,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     memory.set_fonts();
 
     let mut current_key: Option<ScanCode> = None;
-    let mut key_pressed: bool = false;
+    let mut key_pressed: Option<ElementState> = None;
 
     // main event loop
     event_loop.run(move |event, _, control_flow| {
@@ -50,7 +50,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
 
                 let key_state = KeyPress {
                     current_key,
-                    key_pressed,
+                    state: key_pressed,
                 };
                 execute(
                     instruction,
@@ -86,7 +86,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                     ..
                 } => {
                     current_key = match_key(key_scancode);
-                    key_pressed = true;
+                    key_pressed = Some(ElementState::Pressed);
                 }
                 WindowEvent::KeyboardInput {
                     input:
@@ -98,7 +98,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                     ..
                 } => {
                     current_key = None;
-                    key_pressed = false;
+                    key_pressed = Some(ElementState::Released);
                 }
                 _ => {}
             },

@@ -1,5 +1,5 @@
 use pixels::Pixels;
-use winit::event::ScanCode;
+use winit::event::{ScanCode, ElementState};
 
 use crate::{
     draw::{Draw, Point},
@@ -19,7 +19,7 @@ pub fn execute(
     width: u32,
     key_state: KeyPress,
 ) {
-    println!("{:04X}", instruction);
+    // println!("{:04X}", instruction);
     /*
      * NNN: address
      * NN: 8-bit constant
@@ -145,16 +145,25 @@ pub fn execute(
                 0x1 => {
                     // 8XY1 Sets VX to VX or VY. (bitwise OR operation)
                     registers.set_register(vx_index, vx_value | vy_value);
+
+                    // reset flag register to zero
+                    registers.set_register(0xF, 0);
                 }
 
                 0x2 => {
                     // 8XY2 Sets VX to VX and VY. (bitwise AND operation)
                     registers.set_register(vx_index, vx_value & vy_value);
+                
+                    // reset flag register to zero
+                    registers.set_register(0xF, 0);
                 }
 
                 0x3 => {
                     // 8XY3 Sets VX to VX xor VY.
                     registers.set_register(vx_index, vx_value ^ vy_value);
+
+                    // reset flag register to zero
+                    registers.set_register(0xF, 0);
                 }
 
                 0x4 => {
@@ -245,8 +254,8 @@ pub fn execute(
             let location = location_u16 as usize;
             let pixels = &active_memory[location..location + length];
             let dest = &Point {
-                x: (vx_value & 63) as usize,
-                y: (vy_value & 31) as usize,
+                x: (vx_value % 64) as usize,
+                y: (vy_value % 32) as usize,
             };
             registers.set_register(0xF, 0);
 
@@ -267,31 +276,25 @@ pub fn execute(
             match instruction & 0xFF {
                 // EX9E Skips the next instruction if the key stored in VX is pressed (usually the next instruction is a jump to skip a code block).
                 0x9E => {
-                    println!("{:04X}, vx register: {}", instruction, vx_value);
                     match key_state.current_key {
                         Some(value) => {
                             if value as u8 == vx_value {
                                 program_counter.increment_by(2);
                             }
                         }
-                        None => {
-                        }
+                        None => {}
                     }
                 }
                 // EXA1 Skips the next instruction if the key stored in VX is not pressed (usually the next instruction is a jump to skip a code block).
                 0xA1 => {
                     match key_state.current_key {
                         Some(value) => {
-                            println!("{:04X}, vx register: {}, key pressed: {}, current key: {}", instruction, vx_value, key_state.key_pressed, value);
                             if value as u8 != vx_value {
-                                println!("skipping next instruction.");
                                 program_counter.increment_by(2);
                             }
 
                         }
                         None => {
-                            println!("{:04X}, vx register: {}, key pressed: {}, current key: None", instruction, vx_value, key_state.key_pressed);
-                            println!("no key, skipping next instruction");
                             program_counter.increment_by(2);
                         }
                     }
@@ -304,32 +307,27 @@ pub fn execute(
             match instruction & 0xFF {
                 // FX07	Sets VX to the value of the delay timer.
                 0x07 => {
-                    println!("Delay timer value: {}", dt);
                     registers.set_register(vx_index, dt);
                 }
                 // FX0A	A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event).
                 0x0A => {
-                    println!("FX0A: Get key");
-
-                    // NOT RELEASED - Your implementation doesn't wait for the pressed key to be released before resuming
-                    if key_state.key_pressed {
-                        match key_state.current_key {
-                            Some(value) => {
-                                println!("Saving key: {}", value);
-                                registers.set_register(vx_index, value as u8);
+                    match key_state.state {
+                        Some(ElementState::Released) => {
+                            match key_state.current_key {
+                                Some(value) => {
+                                    registers.set_register(vx_index, value as u8);
+                                }
+                                _ => {
+                                    program_counter.decrement();
+                                    program_counter.decrement();
+                                },
                             }
-                            None => {
-                                println!("Value is undefined");
-                            },
-                        }
-                    } else {
-                        program_counter.decrement();
-                        program_counter.decrement();
-                    }
+                        },
+                        _ => {}
+                    } 
                 }
                 // FX15	Sets the delay timer to VX.
                 0x15 => {
-                    println!("FX15 - setting delay timer: {}", vx_value);
                     registers.set_delay_timer(vx_value);
                 }
                 // FX18	Sets the sound timer to VX.
@@ -363,15 +361,24 @@ pub fn execute(
                     for value in 0..vx_index + 1 {
                         let reg_value = *registers.get_register(value).unwrap();
                         let i = *registers.get_i_register() as usize;
+
                         active_memory[i + value as usize] = reg_value;
+
+                        // incrementing i register for older games
+                        // registers.set_i_register((i + value as usize) as u16);
                     }
                 }
                 // FX65	Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified.[d]
                 0x65 => {
-                    for hex in 0..vx_index + 1 {
+                    for value in 0..vx_index + 1 {
                         let i = *registers.get_i_register() as usize;
-                        let value = active_memory[i + hex as usize];
-                        registers.set_register(hex, value);
+
+                        let mem_value = active_memory[i + value as usize];
+
+                        registers.set_register(value, mem_value);
+
+                        // incrementing i register for older games
+                        // registers.set_i_register((i + value as usize) as u16);
                     }
                 }
                 _ => (),
@@ -497,5 +504,5 @@ pub fn match_key(key_scancode: u32) -> Option<u32>{
 #[derive(Debug)]
 pub struct KeyPress {
     pub current_key: Option<ScanCode>,
-    pub key_pressed: bool,
+    pub state: Option<ElementState>,
 }
