@@ -71,7 +71,6 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                 control_flow.set_exit();
             }
             Event::RedrawRequested(_) => {
-                println!("redrawing");
                 pixels.render().unwrap();
             }
             Event::WindowEvent { event, window_id } if window_id == window.id() => match event {

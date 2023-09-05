@@ -52,7 +52,6 @@ mod program_counter_tests {
     fn can_increment() {
         let mut pc = ProgramCounter::new();
 
-        println!("the count is: {}", pc.pc);
         assert!(pc.pc == 0);
         pc.increment(); // 1
         pc.increment(); // 2

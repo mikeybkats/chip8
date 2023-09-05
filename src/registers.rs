@@ -118,7 +118,6 @@ impl Registers {
             if elapsed_time > num_millis_in_1_60 {
                 // find the number of ticks to subtract from DT total
                 let difference = elapsed_time / (num_millis_in_1_60);
-                // println!("difference: {}", difference);
 
                 if difference >= 1 {
                     // check to make sure that the delay timer has enough value for the operation
@@ -131,18 +130,11 @@ impl Registers {
                 }
             }
         }
-        // else {
-        //     self.set_delay_timer(60);
-        // }
         &self.delay_timer
     }
 
     pub fn set_delay_timer(&mut self, value: u8) {
         self.delay_timer_instant = Instant::now();
-        // println!("Delay timer: {}", value);
-        // if value == 0 {
-        //     println!("Clocked");
-        // }
         self.delay_timer = value
     }
 }
