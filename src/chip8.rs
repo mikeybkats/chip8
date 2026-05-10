@@ -1,13 +1,13 @@
 use std::time::{Duration, Instant};
 
 use winit::{
-    event::{ElementState, Event, KeyboardInput, ScanCode, WindowEvent},
+    event::{ElementState, Event, KeyboardInput, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
 };
 
 use crate::{
     display::{build_pixels, build_window},
-    emulator::{execute, fetch_instruction, match_key, KeyPress},
+    emulator::{execute, fetch_instruction, match_key, KeyState},
     memory::Memory,
     program_counter::ProgramCounter,
     registers::Registers,
@@ -32,8 +32,8 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
     memory.set_rom(&rom).unwrap();
     memory.set_fonts();
 
-    let mut current_key: Option<ScanCode> = None;
-    let mut key_pressed: Option<ElementState> = None;
+    // CHIP-8 keypad key (0x0..=0xF) currently held, if any.
+    let mut held_chip8_key: Option<u8> = None;
 
     // main event loop
     event_loop.run(move |event, _, control_flow| {
@@ -48,9 +48,8 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                 let instruction =
                     fetch_instruction(memory.get_memory(), &mut program_counter, rom_length);
 
-                let key_state = KeyPress {
-                    current_key,
-                    state: key_pressed,
+                let keys = KeyState {
+                    held_key: held_chip8_key,
                 };
                 execute(
                     instruction,
@@ -60,7 +59,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                     &mut program_counter,
                     &mut pixels,
                     width,
-                    key_state,
+                    keys,
                 );
             }
             Event::WindowEvent {
@@ -84,8 +83,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                         },
                     ..
                 } => {
-                    current_key = match_key(key_scancode);
-                    key_pressed = Some(ElementState::Pressed);
+                    held_chip8_key = match_key(key_scancode);
                 }
                 WindowEvent::KeyboardInput {
                     input:
@@ -96,8 +94,7 @@ pub fn chip8(width: u32, height: u32, rom: Vec<u8>) {
                         },
                     ..
                 } => {
-                    current_key = None;
-                    key_pressed = Some(ElementState::Released);
+                    held_chip8_key = None;
                 }
                 _ => {}
             },

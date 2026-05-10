@@ -1,5 +1,4 @@
 use pixels::Pixels;
-use winit::event::{ScanCode, ElementState};
 
 use crate::{
     draw::{Draw, Point},
@@ -17,7 +16,7 @@ pub fn execute(
     program_counter: &mut ProgramCounter,
     pixels: &mut Pixels,
     width: u32,
-    key_state: KeyPress,
+    keys: KeyState,
 ) {
     // println!("{:04X}", instruction);
     /*
@@ -276,27 +275,14 @@ pub fn execute(
             match instruction & 0xFF {
                 // EX9E Skips the next instruction if the key stored in VX is pressed (usually the next instruction is a jump to skip a code block).
                 0x9E => {
-                    match key_state.current_key {
-                        Some(value) => {
-                            if value as u8 == vx_value {
-                                program_counter.increment_by(2);
-                            }
-                        }
-                        None => {}
+                    if keys.held_key == Some(vx_value) {
+                        program_counter.increment_by(2);
                     }
                 }
                 // EXA1 Skips the next instruction if the key stored in VX is not pressed (usually the next instruction is a jump to skip a code block).
                 0xA1 => {
-                    match key_state.current_key {
-                        Some(value) => {
-                            if value as u8 != vx_value {
-                                program_counter.increment_by(2);
-                            }
-
-                        }
-                        None => {
-                            program_counter.increment_by(2);
-                        }
+                    if keys.held_key != Some(vx_value) {
+                        program_counter.increment_by(2);
                     }
                 }
                 _ => {}
@@ -311,20 +297,12 @@ pub fn execute(
                 }
                 // FX0A	A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event).
                 0x0A => {
-                    match key_state.state {
-                        Some(ElementState::Released) => {
-                            match key_state.current_key {
-                                Some(value) => {
-                                    registers.set_register(vx_index, value as u8);
-                                }
-                                _ => {
-                                    program_counter.decrement();
-                                    program_counter.decrement();
-                                },
-                            }
-                        },
-                        _ => {}
-                    } 
+                    if let Some(k) = keys.held_key {
+                        registers.set_register(vx_index, k);
+                    } else {
+                        program_counter.decrement();
+                        program_counter.decrement();
+                    }
                 }
                 // FX15	Sets the delay timer to VX.
                 0x15 => {
@@ -429,80 +407,47 @@ pub fn fetch_instruction(
     }
 }
 
-pub fn match_key(key_scancode: u32) -> Option<u32>{
+pub fn match_key(key_scancode: u32) -> Option<u8> {
     match key_scancode {
         // Key 1 - 18: 0x1
-        18 => {
-            Some(0x1)
-        }
+        18 => Some(0x1),
         // Key 2 - 19: 0x2
-        19 => {
-            Some(0x2)
-        }
+        19 => Some(0x2),
         // Key 3 - 20: 0x3
-        20 => {
-            Some(0x3)
-        }
+        20 => Some(0x3),
         // Key 4 - 21: 0xC
-        21 => {
-            Some(0xC)
-        }
+        21 => Some(0xC),
         // Key Q - 12: 0x4
-        12 => {
-            Some(0x4)
-        }
+        12 => Some(0x4),
         // Key W - 13: 0x5
-        13 => {
-            Some(0x5)
-        }
+        13 => Some(0x5),
         // Key E - 14: 0x6
-        14 => {
-            Some(0x6)
-        }
+        14 => Some(0x6),
         // Key R - 15: 0xD
-        15 => {
-            Some(0xD)
-        }
+        15 => Some(0xD),
         // Key A - 0:  0x7
-        0 => {
-            Some(0x7)
-        }
+        0 => Some(0x7),
         // Key S - 1:  0x8
-        1 => {
-            Some(0x8)
-        }
+        1 => Some(0x8),
         // Key D - 2:  0x9
-        2 => {
-            Some(0x9)
-        }
+        2 => Some(0x9),
         // Key F - 3:  0xE
-        3 => {
-            Some(0xE)
-        }
+        3 => Some(0xE),
         // Key Z - 6:  0xA
-        6 => {
-            Some(0xA)
-        }
+        6 => Some(0xA),
         // Key X - 7:  0x0
-        7 => {
-            Some(0x0)
-        }
+        7 => Some(0x0),
         // Key C - 8:  0xB
-        8 => {
-            Some(0xB)
-        }
+        8 => Some(0xB),
         // Key V - 9:  0xF
-        9 => {
-            Some(0xF)
-        }
-        _ => {
-            None
-        }
+        9 => Some(0xF),
+        _ => None,
     }
 }
 
-#[derive(Debug)]
-pub struct KeyPress {
-    pub current_key: Option<ScanCode>,
-    pub state: Option<ElementState>,
+/// Keyboard mapped to CHIP-8 hex keypad (0x0..=0xF).
+#[derive(Debug, Clone, Copy, Default)]
+pub struct KeyState {
+    /// Key currently held, if any.
+    pub held_key: Option<u8>,
 }
