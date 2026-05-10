@@ -6,7 +6,7 @@ pub struct Draw<'a> {
     // sprites: Vec<u16>,
 }
 impl Draw<'_> {
-    pub fn new(width: u32, screen: &mut [u8]) -> Draw {
+    pub fn new(width: u32, screen: &mut [u8]) -> Draw<'_> {
         Draw {
             width: width as usize,
             screen,
@@ -73,11 +73,4 @@ impl Draw<'_> {
 pub struct Point {
     pub x: usize,
     pub y: usize,
-}
-
-/*  Drawables can be blitted to the pixel buffer and animated. */
-pub trait Drawable {
-    fn width(&self) -> usize;
-    fn height(&self) -> usize;
-    fn pixels(&self) -> &[u8];
 }

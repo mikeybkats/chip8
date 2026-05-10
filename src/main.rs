@@ -29,13 +29,6 @@ fn read_rom(path: String) -> io::Result<Vec<u8>> {
     Ok(buffer)
 }
 
-fn check_args(args: &[String]) -> Result<String, &'static str> {
-    if args.len() < 2 {
-        return Err("Not enough arguments");
-    }
-    Ok(args[1].clone())
-}
-
 fn main() {
     // Initialize the logger
     // env_logger::builder()
@@ -44,12 +37,12 @@ fn main() {
 
     let args: Vec<String> = env::args().collect();
 
-    let rom_file_path = check_args(&args).unwrap_or_else(|err| {
-        println!("Problem parsing arguments: {err}");
-        process::exit(1);
-    });
-
-    let rom = read_rom(rom_file_path).unwrap();
+    let rom = args
+        .get(1)
+        .map(|path| read_rom(path.clone()).unwrap_or_else(|e| {
+            eprintln!("Could not read ROM at {path}: {e}");
+            process::exit(1);
+        }));
 
     chip8(WIDTH, HEIGHT, rom);
 
